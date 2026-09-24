@@ -4,6 +4,8 @@ DIPy-AI is a modular AI architecture for industrial sensor-data processing, with
 
 The project explores how raw and model-processed manufacturing data can be transformed into useful information, domain knowledge, and operator-facing guidance. The current focus is Layer 3: the knowledge and reasoning layer that works with structured outputs from lower-level data and ML components.
 
+For package-specific documentation, see [`src/dipy_ai/README.md`](src/dipy_ai/README.md).
+
 ## Architecture
 
 DIPy-AI is organised as a three-layer pipeline:
