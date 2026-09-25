@@ -1,5 +1,6 @@
 from dipy_ai.agent import OneStepLLMAgent, UserMessage
 from dipy_ai.simulation import MockSimulator, SimulationRunner
+from dipy_ai.tools import generate_tool_bundles_from_simulator
 from dipy_ai.config import (
     API_KEY, 
     BASE_URL, 
@@ -16,6 +17,7 @@ agent = OneStepLLMAgent(
 )
 
 simulator = MockSimulator()
+tool_bundles = generate_tool_bundles_from_simulator(MockSimulator())
 
 runner = SimulationRunner(simulator=simulator)
 runner.start()

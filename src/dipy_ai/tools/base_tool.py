@@ -5,5 +5,5 @@ class BaseTool(ABC):
         self.name = name
         self.description = description
 
-    def execute(self, **kwargs) -> str:
+    def execute(self, **kwargs):
         raise NotImplementedError("Subclasses must implement the execute method.")
