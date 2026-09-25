@@ -10,4 +10,4 @@ class HistoryTool(BaseTool):
         self._simulator = simulator
 
     def execute(self, *args, **kwargs) -> list[State]:
-        return self._simulator.get_recent_states()
+        return self._simulator.get_recent_states(n=kwargs.get("n", 10))
