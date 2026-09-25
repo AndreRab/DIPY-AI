@@ -137,7 +137,6 @@ class WorkflowAgent(BaseAgent):
             model=self._model_name,
             messages=messages,
         )
-        print(messages)
 
         return {
             "model_response": response.choices[0].message.content
