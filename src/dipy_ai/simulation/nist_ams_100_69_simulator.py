@@ -51,24 +51,37 @@ path = Path(__file__).parent.parent.parent.parent/"data"/"AMS_NIST"/"part01"/"L0
 class NIST_AMS_100_69_SimulatorState(SimulatorState):
     def __init__(self):
         super().__init__()
+        self.diffrence_x : float = None
+        self.diffrence_y : float = None
+        self.diffrence_laser_power : float = None
+        self.diffrence_scan_speed : float = None
+class NIST_AMS_100_69_Simulator(BaseSimulator):
+    def __init__(self):
+        super().__init__()
         self._recent_states : deque[SimulatorState] = deque(maxlen=100)
         self.data = pd.read_csv(path, names=COLUMN_NAMES, chunksize=1)  
         self._current_state : SimulatorState = None
 
-class NIST_AMS_100_69_Simulator(BaseSimulator):
-    def __init__(self):
-        super().__init__()
-        
     def step(self):
+        data = next(self.data).to_dict()
         if self._current_state is None:
-            self._current_state = next(self.data)
+            state : SimulatorState = NIST_AMS_100_69_SimulatorState()
+            state.diffrence_x = data["command_x_mm"] - data["real_x_mm"]
+            state.diffrence_y = data["command_y_mm"] - data["real_y_mm"]
+            state.diffrence_laser_power = data["command_laser_power_w"] - data["real_laser_power_w"]
+            state.diffrence_scan_speed = data["command_scan_speed_mm_s"] - data["real_scan_speed_mm_s"]
+            self._current_state = state
         else:
-            self._current_state = next(self.data)
-        self._recent_states.append(self._current_state)
+            state = NIST_AMS_100_69_SimulatorState()
+            state.diffrence_x = data["command_x_mm"] - data["real_x_mm"]
+            state.diffrence_y = data["command_y_mm"] - data["real_y_mm"]
+            state.diffrence_laser_power = data["command_laser_power_w"] - data["real_laser_power_w"]
+            state.diffrence_scan_speed = data["command_scan_speed_mm_s"] - data["real_scan_speed_mm_s"]
+        self._current_state = state
+        self._recent_states.extend(self._current_state)
         
-    
     def get_current_state(self):
         return self._current_state
     
-    def get_recent_states(self, n: int):
+    def get_recent_states(self, n: int) -> list[SimulatorState]:
         return list(self._recent_states)[-n:]
