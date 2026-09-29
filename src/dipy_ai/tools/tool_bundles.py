@@ -5,7 +5,7 @@ from dipy_ai.tools.base_tool import BaseTool
 from dipy_ai.tools.anomaly_tool import AnomalyTool
 from dipy_ai.tools.current_state_tool import CurrentStateTool
 from dipy_ai.tools.history_tool import HistoryTool
-from dipy_ai.tools.machine_context_tool import MachineContextTool
+from dipy_ai.tools.machine_context_tool_nist_100_69 import MachineContext_NIST_AMS_100_69_Tool
 from dipy_ai.tools.rag_tool import RAGTool
 
 
@@ -73,7 +73,7 @@ def generate_tool_bundles_from_simulator(
                 AnomalyTool(simulator=simulator),
                 HistoryTool(simulator=simulator),
                 RAGTool(),
-                MachineContextTool(),
+                MachineContext_NIST_AMS_100_69_Tool(),
             ]
         ),
 
@@ -100,7 +100,7 @@ def generate_tool_bundles_from_simulator(
             ),
             tools=[
                 RAGTool(),
-                MachineContextTool(),
+                MachineContext_NIST_AMS_100_69_Tool(),
             ]
         ),
 
@@ -116,7 +116,7 @@ def generate_tool_bundles_from_simulator(
                 AnomalyTool(simulator=simulator),
                 HistoryTool(simulator=simulator),
                 RAGTool(),
-                MachineContextTool(),
+                MachineContext_NIST_AMS_100_69_Tool(),
             ]
         ),
     }

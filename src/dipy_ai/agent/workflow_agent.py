@@ -101,6 +101,7 @@ class WorkflowAgent(BaseAgent):
 
     def _execute_tool_bundle(self, state: WorkflowState) -> dict:
         selected_bundle = state["active_tool_bundle"]
+        print(f"Selected tool bundle: {selected_bundle}")
         if selected_bundle is None:
             return {"tool_bundle_results": None}
         bundle = self._tool_bundles.get(selected_bundle)
@@ -117,6 +118,7 @@ class WorkflowAgent(BaseAgent):
 
     def _invoke_llm(self, state: WorkflowState) -> dict:
         results = state["tool_bundle_results"]
+        print(f"Tool results: {results}")
         messages = list(state["history"])
 
         if results is not None:
