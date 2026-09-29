@@ -1,9 +1,15 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
+import pandas as pd
 
 @dataclass(frozen=True)
 class SimulatorState():
-    pass  # Placeholder for state attributes
+    """State of the simulator at a given time step."""
+    diffrence_x : float 
+    diffrence_y : float
+    diffrence_laser_power : float
+    diffrence_scan_speed : float
+
 
 class BaseSimulator(ABC):
     @abstractmethod
