@@ -77,8 +77,8 @@ class NIST_AMS_100_69_Simulator(BaseSimulator):
             state.diffrence_y = data["command_y_mm"] - data["real_y_mm"]
             state.diffrence_laser_power = data["command_laser_power_w"] - data["real_laser_power_w"]
             state.diffrence_scan_speed = data["command_scan_speed_mm_s"] - data["real_scan_speed_mm_s"]
-        self._current_state = state
-        self._recent_states.extend(self._current_state)
+            self._current_state = state
+            self._recent_states.extend(self._current_state)
         
     def get_current_state(self):
         return self._current_state
