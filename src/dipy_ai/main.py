@@ -9,6 +9,16 @@ from dipy_ai.config import (
     SYSTEM_PROMPT_FINAL_ANSWER,
     SYSTEM_PROMPT_TOOL_SELECTION
 )
+import logging
+
+workflow_logger = logging.getLogger("dipy_ai.workflow")
+workflow_logger.setLevel(logging.INFO)
+workflow_logger.propagate = False
+workflow_log_handler = logging.StreamHandler()
+workflow_log_handler.setFormatter(
+    logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
+)
+workflow_logger.addHandler(workflow_log_handler)
 
 simulator = MockSimulator()
 tool_bundles = generate_tool_bundles_from_simulator(MockSimulator())
@@ -19,7 +29,9 @@ agent = WorkflowAgent(
     model_name=MODEL_NAME,
     system_prompt_final_answer=SYSTEM_PROMPT_FINAL_ANSWER,
     system_prompt_tool_selection=SYSTEM_PROMPT_TOOL_SELECTION,
-    tool_bundles=tool_bundles
+    tool_bundles=tool_bundles,
+    logger=workflow_logger,
+    use_logger=False,
 )
 
 

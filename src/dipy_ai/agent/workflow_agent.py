@@ -4,6 +4,7 @@ from langgraph.graph import StateGraph, START, END
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, TypedDict
 from openai import OpenAI
+import logging
 import json
 
 
@@ -22,9 +23,14 @@ class WorkflowAgent(BaseAgent):
             system_prompt_final_answer: str,
             system_prompt_tool_selection: str,
             tool_bundles: dict[ToolBundleEnum, ToolBundle],
-            agent_name: str = "WorkflowAgent"
+            agent_name: str = "WorkflowAgent",
+            logger: logging.Logger | None = None,
+            use_logger: bool = False,
         ):
         super().__init__(agent_name)
+        if use_logger and logger is None:
+            raise ValueError("logger must be provided when use_logger is True")
+        self._logger = logger if use_logger else None
         self._client = OpenAI(api_key=api_key, base_url=base_url)
         self._system_prompt_final_answer = system_prompt_final_answer
         self._system_prompt_tool_selection = system_prompt_tool_selection
@@ -96,6 +102,8 @@ class WorkflowAgent(BaseAgent):
             for bundle in self._tool_bundles
             if bundle.value == selected_value
         )
+        if self._logger is not None:
+            self._logger.info("Selected tool bundle: %s", selected_bundle.value)
 
         return {"active_tool_bundle": selected_bundle}
 
@@ -104,6 +112,12 @@ class WorkflowAgent(BaseAgent):
         if selected_bundle is None:
             return {"tool_bundle_results": None}
         bundle = self._tool_bundles.get(selected_bundle)
+        if self._logger is not None:
+            self._logger.info(
+                "Executing tool bundle %s with tools: %s",
+                selected_bundle.value,
+                [tool.name for tool in bundle.tools],
+            )
         with ThreadPoolExecutor(max_workers=max(1, len(bundle.tools))) as executor:
             futures = {
                 tool.name: executor.submit(tool.execute, n=10)
@@ -113,6 +127,8 @@ class WorkflowAgent(BaseAgent):
                 tool_name: future.result()
                 for tool_name, future in futures.items()
             }
+        if self._logger is not None:
+            self._logger.info("Tool bundle %s completed", selected_bundle.value)
         return {"tool_bundle_results": results}
 
     def _invoke_llm(self, state: WorkflowState) -> dict:
@@ -143,7 +159,11 @@ class WorkflowAgent(BaseAgent):
         }
 
     def handle_message(self, message: UserMessage) -> str:
+        if self._logger is not None:
+            self._logger.info("Handling user message")
         self._current_state["history"].append({"role": "user", "content": message.message})
         self._current_state = self._graph.invoke(self._current_state)
         self._current_state["history"].append({"role": "assistant", "content": self._current_state["model_response"]})
+        if self._logger is not None:
+            self._logger.info("Workflow response generated")
         return self._current_state["model_response"]
