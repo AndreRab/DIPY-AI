@@ -10,8 +10,8 @@ class NIST_AMS_100_69_Simulator(BaseSimulator):
     def step(self):
         return None
     
-    def get_current_SimulatorState(self):
+    def get_current_state(self):
         return None
     
-    def get_recent_SimulatorStates(self, n: int):
+    def get_recent_states(self, n: int):
         return []
