@@ -47,8 +47,7 @@ COLUMN_NAMES = [
     "xct_voxel_mean3",
     "xct_voxel_mean5",
 ]
-data_folder = Path(__file__).parent.parent/"data"
-print(len(list(data_folder.iterdir())))
+
 class NIST_AMS_100_69_SimulatorState(SimulatorState):
     def __init__(self):
         super().__init__()
@@ -62,12 +61,15 @@ class NIST_AMS_100_69_SimulatorState(SimulatorState):
         self.melt_pool_area_t100_mm2 : float = None
         self.melt_pool_area_t120_mm2 : float = None
 class NIST_AMS_100_69_Simulator(BaseSimulator):
-    def __init__(self):
+    def __init__(self, data_folder: str | Path):
         super().__init__()
+        self.data_folder = Path(data_folder)
+        if not any(self.data_folder.glob("*.csv")):
+            raise FileNotFoundError(f"No CSV files found in data folder: {self.data_folder}")
         self.data_current_record_index = 0
         self.data_file_index = 0
         self._recent_states : deque[SimulatorState] = deque(maxlen=100)
-        self.data = pd.read_csv(sorted(data_folder.glob("*.csv"))[self.data_file_index], names=COLUMN_NAMES, chunksize=1)
+        self.data = pd.read_csv(sorted(self.data_folder.glob("*.csv"))[self.data_file_index], names=COLUMN_NAMES, chunksize=1)
         self._current_state : SimulatorState = None
 
     def step(self):
@@ -75,35 +77,25 @@ class NIST_AMS_100_69_Simulator(BaseSimulator):
             data = next(self.data).iloc[0].to_dict()
         except StopIteration:
             self.data_current_record_index = 0
-            self.data_file_index = (self.data_file_index + 1) % len(sorted(data_folder.glob("*.csv")))
-            self.data = pd.read_csv(sorted(data_folder.glob("*.csv"))[self.data_file_index], names=COLUMN_NAMES, chunksize=1)
+            self.data_file_index = (self.data_file_index + 1) % len(sorted(self.data_folder.glob("*.csv")))
+            self.data = pd.read_csv(sorted(self.data_folder.glob("*.csv"))[self.data_file_index], names=COLUMN_NAMES, chunksize=1)
             data = next(self.data).iloc[0].to_dict()
         self.data_current_record_index += 1
-        if self._current_state is None:
-            state : SimulatorState = NIST_AMS_100_69_SimulatorState()
-            state.diffrence_x = data["command_x_mm"] - data["real_x_mm"]
-            state.diffrence_y = data["command_y_mm"] - data["real_y_mm"]
-            state.diffrence_laser_power = data["command_laser_power_w"] - data["real_laser_power_w"]
-            state.diffrence_scan_speed = data["command_scan_speed_mm_s"] - data["real_scan_speed_mm_s"]
-            state.melt_pool_length_t100_mm = data["melt_pool_length_t100_mm"]
-            state.melt_pool_width_t100_mm = data["melt_pool_width_t100_mm"]
-            state.melt_pool_area_t80_mm2 = data["melt_pool_area_t80_mm2"]
-            state.melt_pool_area_t100_mm2 = data["melt_pool_area_t100_mm2"]
-            state.melt_pool_area_t120_mm2 = data["melt_pool_area_t120_mm2"]
-            self._current_state = state
-        else:
-            state = NIST_AMS_100_69_SimulatorState()
-            state.diffrence_x = data["command_x_mm"] - data["real_x_mm"]
-            state.diffrence_y = data["command_y_mm"] - data["real_y_mm"]
-            state.diffrence_laser_power = data["command_laser_power_w"] - data["real_laser_power_w"]
-            state.diffrence_scan_speed = data["command_scan_speed_mm_s"] - data["real_scan_speed_mm_s"]
-            state.melt_pool_length_t100_mm = data["melt_pool_length_t100_mm"]
-            state.melt_pool_width_t100_mm = data["melt_pool_width_t100_mm"]
-            state.melt_pool_area_t80_mm2 = data["melt_pool_area_t80_mm2"]
-            state.melt_pool_area_t100_mm2 = data["melt_pool_area_t100_mm2"]
-            state.melt_pool_area_t120_mm2 = data["melt_pool_area_t120_mm2"]
-            self._current_state = state
-            self._recent_states.append(self._current_state)
+        
+        state : SimulatorState = NIST_AMS_100_69_SimulatorState()
+        state.diffrence_x = data["command_x_mm"] - data["real_x_mm"]
+        state.diffrence_y = data["command_y_mm"] - data["real_y_mm"]
+        state.diffrence_laser_power = data["command_laser_power_w"] - data["real_laser_power_w"]
+        state.diffrence_scan_speed = data["command_scan_speed_mm_s"] - data["real_scan_speed_mm_s"]
+        state.melt_pool_length_t100_mm = data["melt_pool_length_t100_mm"]
+        state.melt_pool_width_t100_mm = data["melt_pool_width_t100_mm"]
+        state.melt_pool_area_t80_mm2 = data["melt_pool_area_t80_mm2"]
+        state.melt_pool_area_t100_mm2 = data["melt_pool_area_t100_mm2"]
+        state.melt_pool_area_t120_mm2 = data["melt_pool_area_t120_mm2"]
+        
+        if self._current_state is not None:
+            self._recent_states.append(state)
+        self._current_state = state
         
         
     def get_current_state(self):

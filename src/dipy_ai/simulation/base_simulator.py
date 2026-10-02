@@ -6,8 +6,13 @@ import pandas as pd
 class SimulatorState():
     """State of the simulator at a given time step."""
 
-
 class BaseSimulator(ABC):
+    """Base class for all simulators."""
+
+    def __init__(self, initial_state: SimulatorState | None = None):
+        self.initial_state = initial_state
+        self.current_state = initial_state
+
     @abstractmethod
     def step(self) -> SimulatorState:
         """Advance the process by one simulation step."""
