@@ -3,7 +3,7 @@ import os
 
 load_dotenv()
 
-ALLOWED_BACKEND_ORIGINS = ["http://localhost:5173"]
+ALLOWED_BACKEND_ORIGINS = [ os.getenv("FRONTEND_URL", "http://localhost:5173") ]
 ALLOWED_BACKEND_METHODS = ["*"]
 ALLOWED_BACKEND_HEADERS = ["*"]
 

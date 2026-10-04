@@ -63,8 +63,9 @@ Create a `.env` file in the repository root:
 
 ```dotenv
 GROQ_API_KEY=your_api_key_here
-# Optional; defaults to data/AMS_NIST/part01
 SIMULATION_DATA_FOLDER=data/AMS_NIST/part01
+FRONTEND_URL=http://localhost:5173
+BACKEND_URL=http://localhost:8000
 ```
 
 The current defaults in `config.py` are:
@@ -79,21 +80,30 @@ configured in `config.py` with the keys `x_position` and `y_position` (mm),
 for the signals you want evaluated. Any threshold left unset is reported as
 `not_evaluated`.
 
-## Start the FastAPI backend
+## Start the frontend and FastAPI backend
 
-From the repository root, install dependencies and start the API server:
+From the repository root, create `.env` from `.env.example` if needed, add your
+Groq API key, and install the Python and frontend dependencies once:
 
 ```bash
-uv sync
-uv run uvicorn dipy_ai.api.app:app --reload --host 127.0.0.1 --port 8000
+[ -f .env ] || cp .env.example .env
+make setup
 ```
 
-The frontend calls `POST http://localhost:8000/invoke`. FastAPI's interactive
-API documentation is available at <http://localhost:8000/docs>. Keep this
-process running while using the frontend. Press `Ctrl+C` to stop it.
+Start both servers together:
 
-See the [frontend README](../../frontend/README.md) for starting the Vite dev
-server.
+```bash
+make dev
+```
+
+The Makefile runner reads `FRONTEND_URL` and `BACKEND_URL` from the root `.env`
+and uses them to bind Vite and Uvicorn. FastAPI reads the same `FRONTEND_URL`
+for CORS, and Vite reads `BACKEND_URL` for its `/invoke` request. The API docs
+are available at `BACKEND_URL/docs` (normally
+<http://localhost:8000/docs>). Press `Ctrl+C` to stop both servers.
+
+See the [frontend README](../../frontend/README.md) for frontend-specific
+details.
 
 ## Start the terminal application
 

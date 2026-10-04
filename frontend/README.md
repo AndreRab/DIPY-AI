@@ -1,29 +1,37 @@
 # DIPy-AI Frontend
 
 The frontend is a React and TypeScript application served by Vite. It sends
-prompts to the FastAPI backend at `http://localhost:8000/invoke`.
+prompts to the FastAPI backend at `${BACKEND_URL}/invoke`, using `BACKEND_URL`
+from the repository root `.env` file.
 
 ## Requirements
 
 - Node.js and npm
-- The backend running locally; see
-  [`src/dipy_ai/README.md`](../src/dipy_ai/README.md#start-the-fastapi-backend)
+- [uv](https://docs.astral.sh/uv/)
+- A root `.env` file with `GROQ_API_KEY`, `FRONTEND_URL`, and `BACKEND_URL`
 
 ## Install and run
 
-From the repository root:
+From the repository root, create `.env` from the example only if it does not
+already exist, then install dependencies once:
 
 ```bash
-cd frontend
-npm ci
-npm run dev
+[ -f .env ] || cp .env.example .env
+make setup
 ```
 
-Open the URL printed by Vite, normally <http://localhost:5173>. Keep the
-backend running in a separate terminal. The backend's CORS configuration allows
-the local Vite origin.
+Add your Groq API key to `.env`, then start both the frontend and backend with:
 
-Press `Ctrl+C` in the frontend terminal to stop the development server.
+```bash
+make dev
+```
+
+The frontend reads `BACKEND_URL` from the root `.env`; the backend reads
+`FRONTEND_URL` there for CORS. `make dev` uses both URLs to choose the bind
+addresses. Press `Ctrl+C` to stop both servers.
+
+The Vite dev server uses the configured `FRONTEND_URL`, normally
+<http://localhost:5173>.
 
 ## Other commands
 
