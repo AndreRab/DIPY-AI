@@ -4,6 +4,7 @@ import os
 load_dotenv()
 
 API_KEY = os.getenv("GROQ_API_KEY")
+SIMULATION_DATA_FOLDER = os.getenv("SIMULATION_DATA_FOLDER", "data/AMS_NIST/part01")
 BASE_URL = "https://api.groq.com/openai/v1"
 MODEL_NAME = "openai/gpt-oss-20b"
 SYSTEM_PROMPT_FINAL_ANSWER = """

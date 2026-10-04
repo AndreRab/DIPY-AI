@@ -3,8 +3,6 @@ import pandas as pd
 from collections import deque
 from pathlib import Path
 
-
-
 COLUMN_NAMES = [
     "part_number",
     "build_time_us",
@@ -60,6 +58,21 @@ class NIST_AMS_100_69_SimulatorState(SimulatorState):
         self.melt_pool_area_t80_mm2 : float = None
         self.melt_pool_area_t100_mm2 : float = None
         self.melt_pool_area_t120_mm2 : float = None
+    
+    def __str__(self):
+        return (
+            f"NIST_AMS_100_69_SimulatorState("
+            f"diffrence_x={self.diffrence_x}, "
+            f"diffrence_y={self.diffrence_y}, "
+            f"diffrence_laser_power={self.diffrence_laser_power}, "
+            f"diffrence_scan_speed={self.diffrence_scan_speed}, "
+            f"melt_pool_length_t100_mm={self.melt_pool_length_t100_mm}, "
+            f"melt_pool_width_t100_mm={self.melt_pool_width_t100_mm}, "
+            f"melt_pool_area_t80_mm2={self.melt_pool_area_t80_mm2}, "
+            f"melt_pool_area_t100_mm2={self.melt_pool_area_t100_mm2}, "
+            f"melt_pool_area_t120_mm2={self.melt_pool_area_t120_mm2})"
+        )
+        
 class NIST_AMS_100_69_Simulator(BaseSimulator):
     def __init__(self, data_folder: str | Path):
         super().__init__()
@@ -68,9 +81,9 @@ class NIST_AMS_100_69_Simulator(BaseSimulator):
             raise FileNotFoundError(f"No CSV files found in data folder: {self.data_folder}")
         self.data_current_record_index = 0
         self.data_file_index = 0
-        self._recent_states : deque[SimulatorState] = deque(maxlen=100)
+        self._recent_states : deque[str] = deque(maxlen=100)
         self.data = pd.read_csv(sorted(self.data_folder.glob("*.csv"))[self.data_file_index], names=COLUMN_NAMES, chunksize=1)
-        self._current_state : SimulatorState = None
+        self._current_state : str = None
 
     def step(self):
         try:
@@ -94,11 +107,11 @@ class NIST_AMS_100_69_Simulator(BaseSimulator):
         state.melt_pool_area_t120_mm2 = data["melt_pool_area_t120_mm2"]
         
         if self._current_state is not None:
-            self._recent_states.append(state)
-        self._current_state = state
-        
+            self._recent_states.append(str(state))
+        self._current_state = str(state)
         
     def get_current_state(self):
-        return self._current_state
+        return str(self._current_state)
+    
     def get_recent_states(self, n: int) -> list[SimulatorState]:
         return list(self._recent_states)[-n:]

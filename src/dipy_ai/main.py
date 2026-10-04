@@ -1,13 +1,13 @@
 from dipy_ai.agent import WorkflowAgent, UserMessage
-from dipy_ai.agent.one_step_llm_agent import OneStepLLMAgent
-from dipy_ai.simulation import MockSimulator, SimulationRunner
+from dipy_ai.simulation import NIST_AMS_100_69_Simulator, SimulationRunner
 from dipy_ai.tools import generate_tool_bundles_from_simulator
 from dipy_ai.config import (
     API_KEY, 
     BASE_URL, 
     MODEL_NAME,
     SYSTEM_PROMPT_FINAL_ANSWER,
-    SYSTEM_PROMPT_TOOL_SELECTION
+    SYSTEM_PROMPT_TOOL_SELECTION,
+    SIMULATION_DATA_FOLDER
 )
 import logging
 
@@ -20,8 +20,10 @@ workflow_log_handler.setFormatter(
 )
 workflow_logger.addHandler(workflow_log_handler)
 
-simulator = MockSimulator()
-tool_bundles = generate_tool_bundles_from_simulator(MockSimulator())
+simulator = NIST_AMS_100_69_Simulator(
+    data_folder=SIMULATION_DATA_FOLDER,
+)
+tool_bundles = generate_tool_bundles_from_simulator(simulator)
 agent = WorkflowAgent(
     agent_name="Agent",
     api_key=API_KEY,
@@ -31,7 +33,7 @@ agent = WorkflowAgent(
     system_prompt_tool_selection=SYSTEM_PROMPT_TOOL_SELECTION,
     tool_bundles=tool_bundles,
     logger=workflow_logger,
-    use_logger=False,
+    use_logger=True,
 )
 
 

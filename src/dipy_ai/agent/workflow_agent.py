@@ -148,6 +148,9 @@ class WorkflowAgent(BaseAgent):
                     ),
                 }
             )
+        
+        if self._logger is not None:
+            self._logger.info(messages[-1]["content"])  
             
         response = self._client.chat.completions.create(
             model=self._model_name,
