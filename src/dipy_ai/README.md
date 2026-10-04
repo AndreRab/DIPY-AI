@@ -14,21 +14,26 @@ system described in the project research documents.
 dipy_ai/
 ├── agent/
 │   ├── base_agent.py          # Agent interface and UserMessage
-│   └── one_step_llm_agent.py  # OpenAI-compatible chat agent
+│   ├── one_step_llm_agent.py  # OpenAI-compatible chat agent
+│   └── workflow_agent.py      # Tool-routed workflow agent
+├── api/
+│   └── app.py                 # FastAPI application used by the frontend
 ├── simulation/
 │   ├── base_simulator.py      # Simulator interface and State
-│   ├── mock_simulator.py      # Minimal simulator implementation
+│   ├── nist_ams_100_69_simulator.py # NIST CSV data simulator
 │   └── simulation_runner.py   # Background simulation loop
 ├── tools/
-│   └── base_tool.py           # Base interface for domain tools
+│   ├── base_tool.py           # Base interface for domain tools
+│   └── anomaly_tool.py        # Command-to-measurement deviation analysis
 ├── config.py                  # Environment-backed configuration
-└── main.py                    # Interactive application entry point
+└── main.py                    # Interactive terminal application
 ```
 
 ## Requirements
 
 - Python 3.13 or newer
 - [uv](https://docs.astral.sh/uv/)
+- Node.js and npm for the web frontend
 - A Groq API key for the default LLM configuration
 
 ## Installation with uv
@@ -58,6 +63,8 @@ Create a `.env` file in the repository root:
 
 ```dotenv
 GROQ_API_KEY=your_api_key_here
+# Optional; defaults to data/AMS_NIST/part01
+SIMULATION_DATA_FOLDER=data/AMS_NIST/part01
 ```
 
 The current defaults in `config.py` are:
@@ -65,16 +72,40 @@ The current defaults in `config.py` are:
 - API endpoint: `https://api.groq.com/openai/v1`
 - Model: `openai/gpt-oss-20b`
 
-## Start the application
+The simulation data folder is resolved relative to the current working
+directory; run the backend from the repository root. Anomaly thresholds are
+configured in `config.py` with the keys `x_position` and `y_position` (mm),
+`laser_power` (W), and `scan_speed` (mm/s). Set validated absolute tolerances
+for the signals you want evaluated. Any threshold left unset is reported as
+`not_evaluated`.
 
-Run the interactive application from the repository root:
+## Start the FastAPI backend
+
+From the repository root, install dependencies and start the API server:
+
+```bash
+uv sync
+uv run uvicorn dipy_ai.api.app:app --reload --host 127.0.0.1 --port 8000
+```
+
+The frontend calls `POST http://localhost:8000/invoke`. FastAPI's interactive
+API documentation is available at <http://localhost:8000/docs>. Keep this
+process running while using the frontend. Press `Ctrl+C` to stop it.
+
+See the [frontend README](../../frontend/README.md) for starting the Vite dev
+server.
+
+## Start the terminal application
+
+To use the terminal chat instead of the web frontend, run from the repository
+root:
 
 ```bash
 uv run python -m dipy_ai.main
 ```
 
-The application starts the mock simulation runner and opens a terminal chat.
-Enter `exit` or `quit` to stop the simulation and close the application.
+The application starts the NIST simulation runner and opens a terminal chat.
+Enter `exit` or `quit` to stop it.
 
 ## Main components
 
@@ -86,9 +117,8 @@ completion endpoint.
 
 ### `dipy_ai.simulation`
 
-Defines the simulator contract and a background `SimulationRunner`. The
-current `MockSimulator` is intentionally minimal and can be replaced with a
-domain-specific simulator as the project develops.
+Defines the simulator contract, the NIST AMS 100-69 CSV simulator, and a
+background `SimulationRunner`.
 
 ### `dipy_ai.tools`
 
