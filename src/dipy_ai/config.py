@@ -3,10 +3,15 @@ import os
 
 load_dotenv()
 
-API_KEY = os.getenv("GROQ_API_KEY")
+ALLOWED_BACKEND_ORIGINS = ["http://localhost:5173"]
+ALLOWED_BACKEND_METHODS = ["*"]
+ALLOWED_BACKEND_HEADERS = ["*"]
+
 SIMULATION_DATA_FOLDER = os.getenv("SIMULATION_DATA_FOLDER", "data/AMS_NIST/part01")
 # Possible thresholds keys: x_position, y_position, laser_power, scan_speed
 ANOMALY_THRESHOLDS: dict[str, float] = {}
+
+API_KEY = os.getenv("GROQ_API_KEY")
 BASE_URL = "https://api.groq.com/openai/v1"
 MODEL_NAME = "openai/gpt-oss-20b"
 SYSTEM_PROMPT_FINAL_ANSWER = """

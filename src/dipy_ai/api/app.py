@@ -1,7 +1,6 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -10,12 +9,21 @@ from dipy_ai.simulation import SimulationRunner
 from dipy_ai.simulation.nist_ams_100_69_simulator import NIST_AMS_100_69_Simulator
 from dipy_ai.tools import generate_tool_bundles_from_simulator
 from dipy_ai.config import (
-    API_KEY, BASE_URL, MODEL_NAME, DATA_FOLDER,
-    SYSTEM_PROMPT_FINAL_ANSWER, SYSTEM_PROMPT_TOOL_SELECTION,
+    ALLOWED_BACKEND_HEADERS,
+    API_KEY, 
+    BASE_URL,
+    MODEL_NAME, 
+    ANOMALY_THRESHOLDS,
+    ALLOWED_BACKEND_ORIGINS,
+    ALLOWED_BACKEND_METHODS,
+    ALLOWED_BACKEND_HEADERS,
+    SIMULATION_DATA_FOLDER,
+    SYSTEM_PROMPT_FINAL_ANSWER,
+    SYSTEM_PROMPT_TOOL_SELECTION,
 )
 
-simulator = NIST_AMS_100_69_Simulator(data_folder=DATA_FOLDER)
-tool_bundles = generate_tool_bundles_from_simulator(simulator)
+simulator = NIST_AMS_100_69_Simulator(data_folder=SIMULATION_DATA_FOLDER)
+tool_bundles = generate_tool_bundles_from_simulator(simulator,ANOMALY_THRESHOLDS)
 agent = WorkflowAgent(
     agent_name="Agent",
     api_key=API_KEY,
@@ -39,9 +47,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=ALLOWED_BACKEND_ORIGINS,
+    allow_methods=ALLOWED_BACKEND_METHODS,
+    allow_headers=ALLOWED_BACKEND_HEADERS,
 )
 
 
