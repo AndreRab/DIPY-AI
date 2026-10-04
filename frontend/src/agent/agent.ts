@@ -5,12 +5,8 @@ export interface AgentResponse {
 }
 
 async function invokeAgent(prompt : string) : Promise<AgentResponse> {
-    const response = await ky.post<AgentResponse>('http://localhost:8000/invoke', {body: prompt})
-    if (response.ok){
-        return await response.json()
-    } else {
-        throw new Error('Failed to invoke agent')
-    }
+    const response = await ky.post<AgentResponse>('http://localhost:8000/invoke', {json : {prompt: prompt}})
+    return await response.json()
 }
 
 export default invokeAgent;
