@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from dipy_ai.simulation import BaseSimulator, SimulatorState
 import pandas as pd
 from collections import deque
@@ -46,32 +47,25 @@ COLUMN_NAMES = [
     "xct_voxel_mean5",
 ]
 
+@dataclass(frozen=True)
+class CommandMeasuredValue:
+    command: float | None
+    measured: float | None
+
+
+@dataclass(frozen=True)
 class NIST_AMS_100_69_SimulatorState(SimulatorState):
-    def __init__(self):
-        super().__init__()
-        self.diffrence_x : float = None
-        self.diffrence_y : float = None
-        self.diffrence_laser_power : float = None
-        self.diffrence_scan_speed : float = None
-        self.melt_pool_length_t100_mm : float = None
-        self.melt_pool_width_t100_mm : float = None
-        self.melt_pool_area_t80_mm2 : float = None
-        self.melt_pool_area_t100_mm2 : float = None
-        self.melt_pool_area_t120_mm2 : float = None
-    
-    def __str__(self):
-        return (
-            f"NIST_AMS_100_69_SimulatorState("
-            f"diffrence_x={self.diffrence_x}, "
-            f"diffrence_y={self.diffrence_y}, "
-            f"diffrence_laser_power={self.diffrence_laser_power}, "
-            f"diffrence_scan_speed={self.diffrence_scan_speed}, "
-            f"melt_pool_length_t100_mm={self.melt_pool_length_t100_mm}, "
-            f"melt_pool_width_t100_mm={self.melt_pool_width_t100_mm}, "
-            f"melt_pool_area_t80_mm2={self.melt_pool_area_t80_mm2}, "
-            f"melt_pool_area_t100_mm2={self.melt_pool_area_t100_mm2}, "
-            f"melt_pool_area_t120_mm2={self.melt_pool_area_t120_mm2})"
-        )
+    """Selected raw telemetry values needed for state and anomaly analysis."""
+
+    x_position_mm: CommandMeasuredValue
+    y_position_mm: CommandMeasuredValue
+    laser_power_w: CommandMeasuredValue
+    scan_speed_mm_s: CommandMeasuredValue
+    melt_pool_length_t100_mm: float | None
+    melt_pool_width_t100_mm: float | None
+    melt_pool_area_t80_mm2: float | None
+    melt_pool_area_t100_mm2: float | None
+    melt_pool_area_t120_mm2: float | None
         
 class NIST_AMS_100_69_Simulator(BaseSimulator):
     def __init__(self, data_folder: str | Path):
@@ -81,11 +75,16 @@ class NIST_AMS_100_69_Simulator(BaseSimulator):
             raise FileNotFoundError(f"No CSV files found in data folder: {self.data_folder}")
         self.data_current_record_index = 0
         self.data_file_index = 0
-        self._recent_states : deque[str] = deque(maxlen=100)
+        self._recent_states: deque[NIST_AMS_100_69_SimulatorState] = deque(maxlen=100)
         self.data = pd.read_csv(sorted(self.data_folder.glob("*.csv"))[self.data_file_index], names=COLUMN_NAMES, chunksize=1)
-        self._current_state : str = None
 
-    def step(self):
+    @staticmethod
+    def _optional_float(value: object) -> float | None:
+        if pd.isna(value):
+            return None
+        return float(value)
+
+    def step(self) -> NIST_AMS_100_69_SimulatorState:
         try:
             data = next(self.data).iloc[0].to_dict()
         except StopIteration:
@@ -94,24 +93,37 @@ class NIST_AMS_100_69_Simulator(BaseSimulator):
             self.data = pd.read_csv(sorted(self.data_folder.glob("*.csv"))[self.data_file_index], names=COLUMN_NAMES, chunksize=1)
             data = next(self.data).iloc[0].to_dict()
         self.data_current_record_index += 1
-        
-        state : SimulatorState = NIST_AMS_100_69_SimulatorState()
-        state.diffrence_x = data["command_x_mm"] - data["real_x_mm"]
-        state.diffrence_y = data["command_y_mm"] - data["real_y_mm"]
-        state.diffrence_laser_power = data["command_laser_power_w"] - data["real_laser_power_w"]
-        state.diffrence_scan_speed = data["command_scan_speed_mm_s"] - data["real_scan_speed_mm_s"]
-        state.melt_pool_length_t100_mm = data["melt_pool_length_t100_mm"]
-        state.melt_pool_width_t100_mm = data["melt_pool_width_t100_mm"]
-        state.melt_pool_area_t80_mm2 = data["melt_pool_area_t80_mm2"]
-        state.melt_pool_area_t100_mm2 = data["melt_pool_area_t100_mm2"]
-        state.melt_pool_area_t120_mm2 = data["melt_pool_area_t120_mm2"]
-        
-        if self._current_state is not None:
-            self._recent_states.append(str(state))
-        self._current_state = str(state)
-        
-    def get_current_state(self):
-        return str(self._current_state)
-    
-    def get_recent_states(self, n: int) -> list[SimulatorState]:
+
+        state = NIST_AMS_100_69_SimulatorState(
+            x_position_mm=CommandMeasuredValue(
+                command=self._optional_float(data["command_x_mm"]),
+                measured=self._optional_float(data["real_x_mm"]),
+            ),
+            y_position_mm=CommandMeasuredValue(
+                command=self._optional_float(data["command_y_mm"]),
+                measured=self._optional_float(data["real_y_mm"]),
+            ),
+            laser_power_w=CommandMeasuredValue(
+                command=self._optional_float(data["command_laser_power_w"]),
+                measured=self._optional_float(data["real_laser_power_w"]),
+            ),
+            scan_speed_mm_s=CommandMeasuredValue(
+                command=self._optional_float(data["command_scan_speed_mm_s"]),
+                measured=self._optional_float(data["real_scan_speed_mm_s"]),
+            ),
+            melt_pool_length_t100_mm=self._optional_float(data["melt_pool_length_t100_mm"]),
+            melt_pool_width_t100_mm=self._optional_float(data["melt_pool_width_t100_mm"]),
+            melt_pool_area_t80_mm2=self._optional_float(data["melt_pool_area_t80_mm2"]),
+            melt_pool_area_t100_mm2=self._optional_float(data["melt_pool_area_t100_mm2"]),
+            melt_pool_area_t120_mm2=self._optional_float(data["melt_pool_area_t120_mm2"]),
+        )
+
+        self.current_state = state
+        self._recent_states.append(state)
+        return state
+
+    def get_current_state(self) -> NIST_AMS_100_69_SimulatorState:
+        return self.current_state
+
+    def get_recent_states(self, n: int) -> list[NIST_AMS_100_69_SimulatorState]:
         return list(self._recent_states)[-n:]

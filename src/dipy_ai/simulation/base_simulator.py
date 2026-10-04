@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
-import pandas as pd
 
 @dataclass(frozen=True)
 class SimulatorState():
@@ -14,7 +13,7 @@ class BaseSimulator(ABC):
         self.current_state = initial_state
 
     @abstractmethod
-    def step(self) -> SimulatorState:
+    def step(self) -> SimulatorState | None:
         """Advance the process by one simulation step."""
         ...
 

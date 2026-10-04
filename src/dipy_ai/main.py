@@ -7,7 +7,8 @@ from dipy_ai.config import (
     MODEL_NAME,
     SYSTEM_PROMPT_FINAL_ANSWER,
     SYSTEM_PROMPT_TOOL_SELECTION,
-    SIMULATION_DATA_FOLDER
+    SIMULATION_DATA_FOLDER,
+    ANOMALY_THRESHOLDS,
 )
 import logging
 
@@ -23,7 +24,10 @@ workflow_logger.addHandler(workflow_log_handler)
 simulator = NIST_AMS_100_69_Simulator(
     data_folder=SIMULATION_DATA_FOLDER,
 )
-tool_bundles = generate_tool_bundles_from_simulator(simulator)
+tool_bundles = generate_tool_bundles_from_simulator(
+    simulator,
+    anomaly_thresholds=ANOMALY_THRESHOLDS,
+)
 agent = WorkflowAgent(
     agent_name="Agent",
     api_key=API_KEY,
@@ -50,4 +54,3 @@ while True:
         break
     response = agent.handle_message(user_input)
     print(f"{agent}: {response}")
-

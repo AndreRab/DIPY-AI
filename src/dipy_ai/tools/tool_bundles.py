@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from collections.abc import Mapping
 from dipy_ai.simulation import BaseSimulator
 from dipy_ai.tools.base_tool import BaseTool
 from dipy_ai.tools.anomaly_tool import AnomalyTool
@@ -28,7 +29,8 @@ class ToolBundle:
 
 
 def generate_tool_bundles_from_simulator(
-    simulator: BaseSimulator
+    simulator: BaseSimulator,
+    anomaly_thresholds: Mapping[str, float] | None = None,
 ) -> dict[ToolBundleEnum, ToolBundle]:
 
     return {
@@ -41,7 +43,7 @@ def generate_tool_bundles_from_simulator(
             ),
             tools=[
                 CurrentStateTool(simulator=simulator),
-                AnomalyTool(simulator=simulator),
+                AnomalyTool(simulator=simulator, thresholds=anomaly_thresholds),
             ]
         ),
 
@@ -54,7 +56,7 @@ def generate_tool_bundles_from_simulator(
             ),
             tools=[
                 CurrentStateTool(simulator=simulator),
-                AnomalyTool(simulator=simulator),
+                AnomalyTool(simulator=simulator, thresholds=anomaly_thresholds),
                 HistoryTool(simulator=simulator),
                 RAGTool(),
             ]
@@ -70,7 +72,7 @@ def generate_tool_bundles_from_simulator(
             ),
             tools=[
                 CurrentStateTool(simulator=simulator),
-                AnomalyTool(simulator=simulator),
+                AnomalyTool(simulator=simulator, thresholds=anomaly_thresholds),
                 HistoryTool(simulator=simulator),
                 RAGTool(),
                 MachineContext_NIST_AMS_100_69_Tool(),
@@ -113,7 +115,7 @@ def generate_tool_bundles_from_simulator(
             ),
             tools=[
                 CurrentStateTool(simulator=simulator),
-                AnomalyTool(simulator=simulator),
+                AnomalyTool(simulator=simulator, thresholds=anomaly_thresholds),
                 HistoryTool(simulator=simulator),
                 RAGTool(),
                 MachineContext_NIST_AMS_100_69_Tool(),

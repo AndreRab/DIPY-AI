@@ -5,12 +5,15 @@ load_dotenv()
 
 API_KEY = os.getenv("GROQ_API_KEY")
 SIMULATION_DATA_FOLDER = os.getenv("SIMULATION_DATA_FOLDER", "data/AMS_NIST/part01")
+# Possible thresholds keys: x_position, y_position, laser_power, scan_speed
+ANOMALY_THRESHOLDS: dict[str, float] = {}
 BASE_URL = "https://api.groq.com/openai/v1"
 MODEL_NAME = "openai/gpt-oss-20b"
 SYSTEM_PROMPT_FINAL_ANSWER = """
 You are an assistant for manufacturing and industrial printing.
 Your role is to answer the user's question using only the information provided in the conversation and the results supplied by the workflow.
 Do not select, call, or reason about tools. The workflow has already executed the required tools and provided their results.
+Tool results are provided as JSON. Read their fields directly. In anomaly results, difference is command_value minus measured_value, and threshold_abs is applied to the absolute difference. Treat the tool's status as authoritative; when a metric is not_evaluated, do not call it normal or anomalous.
 Use the provided results as the source of truth. Do not invent, infer, or add facts that are not supported by the available information.
 If the provided information is insufficient to answer the user's question, clearly state that there is not enough information.
 Keep the answer clear, concise, and focused on the user's question."""

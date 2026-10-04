@@ -6,6 +6,16 @@ from typing import Any, TypedDict
 from openai import OpenAI
 import logging
 import json
+from dataclasses import asdict, is_dataclass
+from enum import Enum
+
+
+def _json_default(value: Any) -> Any:
+    if is_dataclass(value) and not isinstance(value, type):
+        return asdict(value)
+    if isinstance(value, Enum):
+        return value.value
+    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
 
 
 class WorkflowState(TypedDict):
@@ -139,12 +149,12 @@ class WorkflowAgent(BaseAgent):
             messages.append(
                 {
                     "role": "system",
-                    "content": (
-                        "Workflow tool results:\n"
-                        + "\n".join(
-                            f"{tool_name}: {tool_results}"
-                            for tool_name, tool_results in results.items()
-                        )
+                    "content": "Workflow tool results (JSON):\n" + json.dumps(
+                        results,
+                        default=_json_default,
+                        ensure_ascii=False,
+                        allow_nan=False,
+                        indent=2,
                     ),
                 }
             )
