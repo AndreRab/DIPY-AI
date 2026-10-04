@@ -50,8 +50,6 @@ class InvokeRequest(BaseModel):
 
 
 @app.post("/invoke")
-async def invoke(request: InvokeRequest):
-    response = await run_in_threadpool(
-        agent.handle_message, UserMessage(message=request.prompt)
-    )
+def invoke(request: InvokeRequest):
+    response = agent.handle_message(UserMessage(message=request.prompt))
     return {"response": response}
