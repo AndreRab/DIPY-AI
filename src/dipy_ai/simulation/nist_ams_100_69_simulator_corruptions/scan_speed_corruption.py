@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from dipy_ai.simulation.nist_ams_100_69_simulator import NIST_AMS_100_69_SimulatorState
 from dipy_ai.simulation.nist_ams_100_69_simulator_corruptions.base_corruption import BaseCorruption
 
@@ -6,5 +8,10 @@ class ScanSpeedCorruption(BaseCorruption):
         self.magnitude = magnitude
 
     def apply(self, state: NIST_AMS_100_69_SimulatorState) -> NIST_AMS_100_69_SimulatorState:
-        state.scan_speed_mm_s.measured *= (1 + self.magnitude)
-        return state
+        scan_speed_mm_s = state.scan_speed_mm_s
+        if scan_speed_mm_s.measured is not None:
+            scan_speed_mm_s = replace(scan_speed_mm_s, measured=scan_speed_mm_s.measured * (1 + self.magnitude))
+        return replace(
+            state,
+            scan_speed_mm_s=scan_speed_mm_s,
+        )
