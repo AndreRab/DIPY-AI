@@ -11,29 +11,41 @@ import {
 import { Input } from "@/components/ui/input"
 import { useMutation } from "@tanstack/react-query"
 import { Bot, LoaderCircle, SendHorizontal, User } from "lucide-react"
-import { useRef } from "react"
+import { useEffect, useRef, useState } from "react"
+
+interface conversation {
+    prompt: string
+    response: string
+}
 
 export const ChatComponent = () => {
+    const [prompts, setPrompts] = useState<conversation[]>([])
     const mutation = useMutation({
         mutationFn: invokeAgent,
-        onSuccess: (data : AgentResponse) => {
+        onSuccess: (data: AgentResponse) => {
             console.log(data)
         },
-        onError: (error : Error) => {
+        onError: (error: Error) => {
             console.error(error)
         }
     })
     const charValue = useRef<HTMLInputElement>(null)
+    const bottomRef = useRef<HTMLDivElement>(null)
 
-    const send = () => {
-        const text = charValue.current?.value.trim() ?? ''
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+    }, [prompts, mutation.isPending])
+
+    const send = async () => {
+        const text = charValue.current?.value.trim() ?? ""
         if (!text || mutation.isPending) return
-        mutation.mutate(text)
-        if (charValue.current) charValue.current.value = ''
+        const response = await mutation.mutateAsync(text)
+        setPrompts((prev) => [...prev, { prompt: text, response: response.response }])
+        if (charValue.current) charValue.current.value = ""
     }
 
     const handleEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === 'Enter') {
+        if (event.key === "Enter") {
             event.preventDefault()
             send()
         }
@@ -41,7 +53,7 @@ export const ChatComponent = () => {
 
     return (
         <section className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
-            <Card className="w-full max-w-2xl shadow-sm m-auto">
+            <Card className="flex w-full max-w-2xl flex-col shadow-sm">
                 <CardHeader className="border-b">
                     <div className="flex items-center gap-3">
                         <div className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -54,23 +66,33 @@ export const ChatComponent = () => {
                     </div>
                 </CardHeader>
 
-                <CardContent className="flex min-h-64 flex-col gap-4">
-                    {!mutation.variables && (
+                <CardContent className="flex max-h-[60vh] min-h-64 flex-col gap-4 overflow-y-auto">
+                    {prompts.length === 0 && !mutation.isPending && (
                         <p className="m-auto text-center text-sm text-muted-foreground">
                             Type a question below and press Enter.
                         </p>
                     )}
 
-                    {mutation.variables && (
-                        <div className="flex items-start justify-end gap-2">
-                            <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-primary px-4 py-2 text-sm text-primary-foreground">
-                                {mutation.variables}
+                    {prompts.map((item, index) => (
+                        <div key={index} className="flex flex-col gap-3">
+                            <div className="flex items-start justify-end gap-2">
+                                <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-primary px-4 py-2 text-sm text-primary-foreground">
+                                    {item.prompt}
+                                </div>
+                                <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted">
+                                    <User className="size-4" />
+                                </div>
                             </div>
-                            <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted">
-                                <User className="size-4" />
+                            <div className="flex items-start gap-2">
+                                <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted">
+                                    <Bot className="size-4" />
+                                </div>
+                                <div className="max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-tl-sm bg-muted px-4 py-2 text-sm">
+                                    {item.response}
+                                </div>
                             </div>
                         </div>
-                    )}
+                    ))}
 
                     {mutation.isPending && (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -88,16 +110,7 @@ export const ChatComponent = () => {
                         </div>
                     )}
 
-                    {mutation.data && !mutation.isPending && (
-                        <div className="flex items-start gap-2">
-                            <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted">
-                                <Bot className="size-4" />
-                            </div>
-                            <div className="max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-tl-sm bg-muted px-4 py-2 text-sm">
-                                {mutation.data.response}
-                            </div>
-                        </div>
-                    )}
+                    <div ref={bottomRef} />
                 </CardContent>
 
                 <CardFooter className="gap-2 border-t bg-muted/30 py-4">
