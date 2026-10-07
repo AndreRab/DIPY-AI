@@ -1,7 +1,7 @@
 from dipy_ai.simulation import BaseSimulator
 
 class MockSimulator(BaseSimulator):
-    def __init__(self):
+    def __init__(self, **_kwargs):
         super().__init__()
         
     def step(self):

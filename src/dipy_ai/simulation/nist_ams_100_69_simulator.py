@@ -68,7 +68,7 @@ class NIST_AMS_100_69_SimulatorState(SimulatorState):
     melt_pool_area_t120_mm2: float | None
         
 class NIST_AMS_100_69_Simulator(BaseSimulator):
-    def __init__(self, data_folder: str | Path):
+    def __init__(self, data_folder: str | Path, **_kwargs):
         super().__init__()
         self.data_folder = Path(data_folder)
         if not any(self.data_folder.glob("*.csv")):
