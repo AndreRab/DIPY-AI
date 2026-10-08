@@ -16,8 +16,9 @@ import Markdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 
 interface conversation {
+    id: number
     prompt: string
-    response: string
+    response?: string
 }
 
 export const ChatComponent = () => {
@@ -33,17 +34,25 @@ export const ChatComponent = () => {
     })
     const charValue = useRef<HTMLInputElement>(null)
     const bottomRef = useRef<HTMLDivElement>(null)
+    const nextMessageId = useRef(0)
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" })
     }, [prompts, mutation.isPending])
 
-    const send = async () => {
+    const send = () => {
         const text = charValue.current?.value.trim() ?? ""
         if (!text || mutation.isPending) return
-        const response = await mutation.mutateAsync(text)
-        setPrompts((prev) => [...prev, { prompt: text, response: response.response }])
+        const id = nextMessageId.current++
+        setPrompts((prev) => [...prev, { id, prompt: text }])
         if (charValue.current) charValue.current.value = ""
+        mutation.mutate(text, {
+            onSuccess: (data) => {
+                setPrompts((prev) => prev.map((item) =>
+                    item.id === id ? { ...item, response: data.response } : item
+                ))
+            },
+        })
     }
 
     const handleEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -75,8 +84,8 @@ export const ChatComponent = () => {
                         </p>
                     )}
 
-                    {prompts.map((item, index) => (
-                        <div key={index} className="flex flex-col gap-3">
+                    {prompts.map((item) => (
+                        <div key={item.id} className="flex flex-col gap-3">
                             <div className="flex items-start justify-end gap-2">
                                 <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-primary px-4 py-2 text-sm text-primary-foreground">
                                     {item.prompt}
@@ -85,7 +94,7 @@ export const ChatComponent = () => {
                                     <User className="size-4" />
                                 </div>
                             </div>
-                            <div className="flex items-start gap-2">
+                            {item.response !== undefined && <div className="flex items-start gap-2">
                                 <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted">
                                     <Bot className="size-4" />
                                 </div>
@@ -103,7 +112,7 @@ export const ChatComponent = () => {
                                         {item.response}
                                     </Markdown>
                                 </div>
-                            </div>
+                            </div>}
                         </div>
                     ))}
 
