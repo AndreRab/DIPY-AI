@@ -10,7 +10,11 @@ ALLOWED_BACKEND_HEADERS = ["*"]
 SIMULATION_DATA_FOLDER = os.getenv("SIMULATION_DATA_FOLDER", "data/AMS_NIST/part01")
 SIMULATOR = os.getenv("SIMULATOR", "nist_ams_100_69")
 # Possible thresholds keys: x_position, y_position, laser_power, scan_speed
-ANOMALY_THRESHOLDS: dict[str, float] = {}
+ANOMALY_THRESHOLDS: dict[str, float] = {
+    "x_position": 0.25,  # mm
+    "y_position": 0.25,  # mm
+    "laser_power": 10.0,  # W
+}
 
 SIMULATOR_SEED = int(os.getenv("SIMULATOR_SEED", 42))
 
