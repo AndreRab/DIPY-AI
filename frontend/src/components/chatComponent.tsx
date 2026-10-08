@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input"
 import { useMutation } from "@tanstack/react-query"
 import { Bot, LoaderCircle, SendHorizontal, User } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
+import Markdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 interface conversation {
     prompt: string
@@ -87,8 +89,19 @@ export const ChatComponent = () => {
                                 <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted">
                                     <Bot className="size-4" />
                                 </div>
-                                <div className="max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-tl-sm bg-muted px-4 py-2 text-sm">
-                                    {item.response}
+                                <div className="chat-markdown min-w-0 max-w-[90%] rounded-2xl rounded-tl-sm bg-muted px-4 py-2 text-sm">
+                                    <Markdown
+                                        remarkPlugins={[remarkGfm]}
+                                        components={{
+                                            table: ({ children }) => (
+                                                <div className="overflow-x-auto">
+                                                    <table>{children}</table>
+                                                </div>
+                                            ),
+                                        }}
+                                    >
+                                        {item.response}
+                                    </Markdown>
                                 </div>
                             </div>
                         </div>
