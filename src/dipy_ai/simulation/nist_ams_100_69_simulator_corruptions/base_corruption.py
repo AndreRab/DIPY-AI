@@ -8,7 +8,7 @@ class BaseCorruption:
         self.rng = Random(seed)
         
     def set_seed(self, seed: int):
-        self.rng.seed(seed)
+        self.rng = Random(seed)
 
     def apply(self, state: NIST_AMS_100_69_SimulatorState) -> NIST_AMS_100_69_SimulatorState:
         raise NotImplementedError("Subclasses must implement the apply method.")

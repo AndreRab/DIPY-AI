@@ -52,11 +52,11 @@ CORRUPTION_MODE_TO_ClASS_MAP = {
         
 class NIST_AMS_100_69_CorruptModeSimulator(NIST_AMS_100_69_Simulator):
     def __init__(self, data_folder: str | Path, 
-                 corruption_mode: CORRUPTION_MODE,
+                 corruption_mode: CORRUPTION_MODE | str,
                  seed: int = 42
                 ):
         super().__init__(data_folder)
-        self.corruptions : list[BaseCorruption] = CORRUPTION_MODE_TO_ClASS_MAP[corruption_mode]
+        self.corruptions : list[BaseCorruption] = CORRUPTION_MODE_TO_ClASS_MAP[CORRUPTION_MODE(corruption_mode)]
         self._update_seed(seed)
         
     

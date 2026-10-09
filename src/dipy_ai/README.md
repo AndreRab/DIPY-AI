@@ -204,3 +204,21 @@ not calibrated physical predictions or empirical average responses. Area
 scaling assumes a constant shape and uses the same factor across thresholds.
 Commands, other telemetry and missing values are preserved. Every step starts
 from fresh CSV telemetry, so reductions do not accumulate.
+
+### Selecting a corruption mode through environment
+
+The API creates simulators through `create_simulator`, using the simulator
+registry. Unknown simulator names or corruption modes fail explicitly.
+
+```dotenv
+SIMULATOR=nist_ams_100_69_corrupt
+CORRUPTION_MODE=laser_failure_sensor_and_melt_pool
+SIMULATOR_SEED=42
+```
+
+Available modes: `laser_failure_sensor_only` (default),
+`laser_failure_sensor_and_melt_pool`, `laser_failure`, and `position_noise`.
+Restart the backend after changing environment settings. The normal NIST and
+mock simulators ignore the corruption mode. Each corrupt simulator owns fresh
+corruption instances and random generators, so creating another simulator
+cannot reset or advance its random sequence.

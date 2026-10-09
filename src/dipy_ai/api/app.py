@@ -5,8 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from dipy_ai.agent import WorkflowAgent, UserMessage
-from dipy_ai.simulation import SimulationRunner, SIMULATORS_MAP
-from dipy_ai.simulation.nist_ams_100_69_simulator import NIST_AMS_100_69_Simulator
+from dipy_ai.simulation import SimulationRunner, create_simulator
 from dipy_ai.tools import generate_tool_bundles_from_simulator
 from dipy_ai.config import (
     ALLOWED_BACKEND_HEADERS,
@@ -22,9 +21,15 @@ from dipy_ai.config import (
     SYSTEM_PROMPT_TOOL_SELECTION,
     SIMULATOR_SEED,
     SIMULATOR,
+    CORRUPTION_MODE,
 )
 
-simulator = SIMULATORS_MAP.get(SIMULATOR, NIST_AMS_100_69_Simulator)(data_folder=SIMULATION_DATA_FOLDER, seed=SIMULATOR_SEED)
+simulator = create_simulator(
+    SIMULATOR,
+    data_folder=SIMULATION_DATA_FOLDER,
+    seed=SIMULATOR_SEED,
+    corruption_mode=CORRUPTION_MODE,
+)
 tool_bundles = generate_tool_bundles_from_simulator(simulator,ANOMALY_THRESHOLDS)
 agent = WorkflowAgent(
     agent_name="Agent",
