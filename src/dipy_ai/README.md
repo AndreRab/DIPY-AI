@@ -151,3 +151,56 @@ L3 — Knowledge layer     context, retrieval, reasoning, explanation, guidance
 
 See the [Layer 3 research and architecture proposal](../../docs/dipy-ai-layer-3-research-and-proposal.md)
 for the broader design, research context, and planned tool bundles.
+
+
+### Position corruption simulator
+
+`nist_ams_100_69_position_corrupt` adds offsets in millimeters to measured
+X/Y coordinates from each fresh CSV sample. It preserves commanded values,
+missing measurements, and other telemetry fields. Offsets never accumulate.
+
+```python
+from dipy_ai.simulation import NIST_AMS_100_69_PositionCorruptSimulator
+
+simulator = NIST_AMS_100_69_PositionCorruptSimulator(
+    data_folder="data",
+    mode="random",  # "fixed" applies offsets on every step
+    x_offset_mm=0.1,
+    y_offset_mm=-0.2,
+    corruption_probability=0.5,  # used only in random mode
+    seed=42,
+)
+state = simulator.step()
+```
+
+Random mode makes one independent decision per step for the whole X/Y offset
+vector; it does not sample separate events for each axis. A probability of zero
+always preserves the sample, and one always applies the offset. Growing errors
+over time would be a separate drift scenario. The existing `PositionCorruption`
+continues to represent multiplicative scale error.
+
+### Laser power fault scenarios
+
+`nist_ams_100_69_laser_power_corrupt` supports two modes:
+
+- `sensor_only` (default): reduce measured laser power, preserving melt pools.
+- `sensor_and_melt_pool`: reduce measured laser power and apply hardcoded
+  melt-pool factors: 0.75 for length/width and 0.5625 for all three areas.
+
+```python
+from dipy_ai.simulation import NIST_AMS_100_69_LaserPowerCorruptSimulator
+
+simulator = NIST_AMS_100_69_LaserPowerCorruptSimulator(
+    data_folder="data",
+    mode="sensor_and_melt_pool",
+    magnitude=-0.5,
+)
+state = simulator.step()
+```
+
+`magnitude` controls power only and must be in [-1, 0). Melt-pool factors are
+fixed independently of that magnitude. These are synthetic fault scenarios,
+not calibrated physical predictions or empirical average responses. Area
+scaling assumes a constant shape and uses the same factor across thresholds.
+Commands, other telemetry and missing values are preserved. Every step starts
+from fresh CSV telemetry, so reductions do not accumulate.

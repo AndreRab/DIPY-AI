@@ -10,7 +10,7 @@ from random import Random
 from pathlib import Path
 
         
-class NIST_AMS_100_69_CorruptSimulator(NIST_AMS_100_69_Simulator):
+class NIST_AMS_100_69_CorruptRandomSimulator(NIST_AMS_100_69_Simulator):
     def __init__(self, data_folder: str | Path, 
                  corruption_types: list[CorruprionType] | None = None, 
                  max_corruption_type_num: int = len(CorruprionType),
