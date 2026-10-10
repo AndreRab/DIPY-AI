@@ -8,6 +8,8 @@ ALLOWED_BACKEND_METHODS = ["*"]
 ALLOWED_BACKEND_HEADERS = ["*"]
 
 SIMULATION_DATA_FOLDER = os.getenv("SIMULATION_DATA_FOLDER", "data/AMS_NIST/part01")
+RAG_DATA_FOLDER = os.getenv("RAG_DATA_FOLDER", "data/RAG_data/")
+RAG_CHROMA_DB = os.getenv("RAG_CHROMA_DB", "data/RAG_chroma/")
 SIMULATOR = os.getenv("SIMULATOR", "nist_ams_100_69")
 CORRUPTION_MODE = os.getenv("CORRUPTION_MODE", "laser_failure_sensor_only")
 # Possible thresholds keys: x_position, y_position, laser_power, scan_speed
@@ -18,7 +20,8 @@ ANOMALY_THRESHOLDS: dict[str, float] = {
 }
 
 SIMULATOR_SEED = int(os.getenv("SIMULATOR_SEED", 42))
-
+EMBEDDING_MODEL = "gemini-embedding-2"
+EMBEDDING_API_KEY = os.getenv("EMBEDDING_API_KEY")
 API_KEY = os.getenv("GROQ_API_KEY")
 BASE_URL = "https://api.groq.com/openai/v1"
 MODEL_NAME = "openai/gpt-oss-20b"
