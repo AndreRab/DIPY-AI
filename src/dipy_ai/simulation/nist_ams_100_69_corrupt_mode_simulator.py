@@ -24,6 +24,7 @@ class CORRUPTION_MODE(Enum):
     LASER_REDUCE_SENSOR_AND_MELT_POOL = "laser_failure_sensor_and_melt_pool"
     LASER_FAILERE = "laser_failure"
     POSSITION_NOISE = "position_noise"
+    CLEAN = "clean"
 
 CORRUPTION_MODE_TO_ClASS_MAP = {
     CORRUPTION_MODE.LASER_REDUCE_SENSOR_ONLY: [ 
@@ -47,7 +48,8 @@ CORRUPTION_MODE_TO_ClASS_MAP = {
     ],
     CORRUPTION_MODE.POSSITION_NOISE: [
         PositionCorruption(magnitude=0.0, offset_x=0.034, offset_y=0.106, random_threshold=0.25)
-    ]        
+    ],
+    CORRUPTION_MODE.CLEAN: []
 }
         
 class NIST_AMS_100_69_CorruptModeSimulator(NIST_AMS_100_69_Simulator):
