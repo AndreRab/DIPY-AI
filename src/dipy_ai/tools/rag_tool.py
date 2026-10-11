@@ -15,7 +15,17 @@ class RAGTool(BaseTool):
         rag_data_folder = Path(RAG_DATA_FOLDER)
         if not any(rag_data_folder.glob("*.pdf")):
             raise FileNotFoundError(f"No PDF files found in RAG data folder: {rag_data_folder}")
-        pdf_list = list(rag_data_folder.glob("*.pdf"))
+        self._vector_store = Chroma(
+            collection_name="rag_collection",
+            embedding_function=self._embedding,
+            persist_directory=RAG_CHROMA_DB,
+            collection_metadata={"source": "rag_collection"}
+        )
+        if not self._vector_store.get(limit=1, include=[])["ids"]:
+            self._text_chunks = self.load_pdfs()
+            self._vector_store.add_documents(self._text_chunks)
+    def load_pdfs(self):
+        pdf_list = list(Path(RAG_DATA_FOLDER).glob("*.pdf"))
         text_chunks = []
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         for i in pdf_list:
@@ -26,14 +36,7 @@ class RAGTool(BaseTool):
             except Exception as e:
                 print(f"Error loading PDF file {i}: {e}")
                 continue
-        self._vector_store = Chroma(
-            collection_name="rag_collection",
-            embedding_function=self._embedding,
-            persist_directory=RAG_CHROMA_DB,
-            collection_metadata={"source": "rag_collection"}
-        )
-        self._vector_store.add_documents(text_chunks)
-
+        return text_chunks
     def execute(self, *args, **kwargs):
         query = kwargs.get("query", "")
         if not query:

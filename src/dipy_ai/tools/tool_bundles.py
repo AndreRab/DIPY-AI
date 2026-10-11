@@ -32,7 +32,7 @@ def generate_tool_bundles_from_simulator(
     simulator: BaseSimulator,
     anomaly_thresholds: Mapping[str, float] | None = None,
 ) -> dict[ToolBundleEnum, ToolBundle]:
-
+    rag_tool = RAGTool()
     return {
         ToolBundleEnum.CURRENT_SITUATION: ToolBundle(
             name=ToolBundleEnum.CURRENT_SITUATION,
@@ -58,7 +58,7 @@ def generate_tool_bundles_from_simulator(
                 CurrentStateTool(simulator=simulator),
                 AnomalyTool(simulator=simulator, thresholds=anomaly_thresholds),
                 HistoryTool(simulator=simulator),
-                RAGTool(),
+                rag_tool,
             ]
         ),
 
@@ -74,7 +74,7 @@ def generate_tool_bundles_from_simulator(
                 CurrentStateTool(simulator=simulator),
                 AnomalyTool(simulator=simulator, thresholds=anomaly_thresholds),
                 HistoryTool(simulator=simulator),
-                RAGTool(),
+                rag_tool,
                 MachineContext_NIST_AMS_100_69_Tool(),
             ]
         ),
@@ -101,7 +101,7 @@ def generate_tool_bundles_from_simulator(
                 "analysis of the current process state."
             ),
             tools=[
-                RAGTool(),
+                rag_tool,
                 MachineContext_NIST_AMS_100_69_Tool(),
             ]
         ),
@@ -117,7 +117,7 @@ def generate_tool_bundles_from_simulator(
                 CurrentStateTool(simulator=simulator),
                 AnomalyTool(simulator=simulator, thresholds=anomaly_thresholds),
                 HistoryTool(simulator=simulator),
-                RAGTool(),
+                rag_tool,
                 MachineContext_NIST_AMS_100_69_Tool(),
             ]
         ),
