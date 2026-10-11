@@ -67,3 +67,9 @@ The Dante example is intended to serve as a reference for implementation pattern
 ## Safety
 
 This is a research project. Outputs are intended for analysis and operator support, not for direct autonomous control of manufacturing equipment. Any operational recommendation should remain subject to human review.
+
+## Running Aplication 
+
+make setup 
+
+make dev 
