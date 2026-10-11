@@ -1,7 +1,7 @@
 from dataclasses import replace
 
-from dipy_ai.simulation.nist_ams_100_69_simulator import NIST_AMS_100_69_SimulatorState
-from dipy_ai.simulation.nist_ams_100_69_simulator_corruptions.base_corruption import BaseCorruption
+from dipy_ai.simulation.nis_ams_100_69_simulator.nist_ams_100_69_simulator import NIST_AMS_100_69_SimulatorState
+from dipy_ai.simulation.nis_ams_100_69_simulator.nist_ams_100_69_simulator_corruptions.base_corruption import BaseCorruption
 
 class LaserPowerCorruption(BaseCorruption):
     def __init__(self, magnitude: float = 0.1):

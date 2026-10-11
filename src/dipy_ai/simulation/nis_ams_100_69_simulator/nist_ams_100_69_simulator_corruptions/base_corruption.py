@@ -1,5 +1,5 @@
 from random import Random
-from dipy_ai.simulation.nist_ams_100_69_simulator import NIST_AMS_100_69_SimulatorState
+from dipy_ai.simulation.nis_ams_100_69_simulator.nist_ams_100_69_simulator import NIST_AMS_100_69_SimulatorState
 
 
 class BaseCorruption:

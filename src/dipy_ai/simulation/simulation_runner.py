@@ -1,28 +1,38 @@
 import threading
-import time
 
-from dipy_ai.simulation import BaseSimulator
-from dipy_ai.agent import BaseAgent
+from dipy_ai.simulation.base_simulator import BaseSimulator
+
 
 class SimulationRunner:
     def __init__(self, simulator: BaseSimulator, interval_ms: int = 1000):
         self.simulator = simulator
-        self._interval_ms = interval_ms
-        self._running = False
+        self.set_interval(interval_ms)
+        self._stop_event = threading.Event()
         self._thread = None
 
+    def set_interval(self, interval_ms: int):
+        self._interval_ms = interval_ms
+
+    @property
+    def running(self):
+        return bool(self._thread and self._thread.is_alive() and not self._stop_event.is_set())
+
     def start(self):
-        self._running = True
-        self._thread = threading.Thread(
-            target=self._run,
-            daemon=True,
-        )
+        if self.running:
+            return
+        self._stop_event.clear()
+        self._thread = threading.Thread(target=self._run, daemon=True)
         self._thread.start()
 
     def _run(self):
-        while self._running:
-            state = self.simulator.step()
-            time.sleep(self._interval_ms / 1000)
+        try:
+            while not self._stop_event.is_set():
+                self.simulator.step()
+                self._stop_event.wait(self._interval_ms / 1000)
+        finally:
+            self._stop_event.set()
 
     def stop(self):
-        self._running = False
+        self._stop_event.set()
+        if self._thread and self._thread is not threading.current_thread():
+            self._thread.join()

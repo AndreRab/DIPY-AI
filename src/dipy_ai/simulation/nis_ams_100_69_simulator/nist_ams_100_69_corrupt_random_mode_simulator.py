@@ -1,7 +1,7 @@
-from dipy_ai.simulation.nist_ams_100_69_simulator_corruptions import (
+from dipy_ai.simulation.nis_ams_100_69_simulator.nist_ams_100_69_simulator_corruptions import (
     CorruprionType, CorruptionTypeToClassMap
 )
-from dipy_ai.simulation.nist_ams_100_69_simulator import (
+from dipy_ai.simulation.nis_ams_100_69_simulator.nist_ams_100_69_simulator import (
     NIST_AMS_100_69_SimulatorState, 
     NIST_AMS_100_69_Simulator
 )

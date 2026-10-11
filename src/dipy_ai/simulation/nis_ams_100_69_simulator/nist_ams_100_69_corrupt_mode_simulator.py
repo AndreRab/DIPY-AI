@@ -1,6 +1,7 @@
 from enum import Enum
+from copy import deepcopy
 
-from dipy_ai.simulation.nist_ams_100_69_simulator_corruptions import (
+from dipy_ai.simulation.nis_ams_100_69_simulator.nist_ams_100_69_simulator_corruptions import (
     LaserPowerCorruption, 
     MeltPoolLengthT100Corruption,
     MeltPoolWidthT100Corruption,
@@ -9,7 +10,7 @@ from dipy_ai.simulation.nist_ams_100_69_simulator_corruptions import (
     MeltPoolAreaT120Corruption,
     PositionCorruption
 )
-from dipy_ai.simulation.nist_ams_100_69_simulator import (
+from dipy_ai.simulation.nis_ams_100_69_simulator.nist_ams_100_69_simulator import (
     NIST_AMS_100_69_SimulatorState, 
     NIST_AMS_100_69_Simulator
 )
@@ -17,7 +18,7 @@ from dipy_ai.simulation.nist_ams_100_69_simulator import (
 from random import Random
 from pathlib import Path
 
-from dipy_ai.simulation.nist_ams_100_69_simulator_corruptions.base_corruption import BaseCorruption
+from dipy_ai.simulation.nis_ams_100_69_simulator.nist_ams_100_69_simulator_corruptions.base_corruption import BaseCorruption
 
 class CORRUPTION_MODE(Enum):
     LASER_REDUCE_SENSOR_ONLY = "laser_failure_sensor_only"
@@ -58,7 +59,7 @@ class NIST_AMS_100_69_CorruptModeSimulator(NIST_AMS_100_69_Simulator):
                  seed: int = 42
                 ):
         super().__init__(data_folder)
-        self.corruptions : list[BaseCorruption] = CORRUPTION_MODE_TO_ClASS_MAP[CORRUPTION_MODE(corruption_mode)]
+        self.corruptions : list[BaseCorruption] = deepcopy(CORRUPTION_MODE_TO_ClASS_MAP[CORRUPTION_MODE(corruption_mode)])
         self._update_seed(seed)
         
     

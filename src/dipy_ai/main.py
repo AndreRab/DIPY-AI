@@ -1,5 +1,6 @@
 from dipy_ai.agent import WorkflowAgent, UserMessage
-from dipy_ai.simulation import NIST_AMS_100_69_Simulator, SimulationRunner
+from dipy_ai.simulation import NIST_AMS_100_69_CorruptModeSimulator, SimulationRunner
+from dipy_ai.api.nist_ams_mode_service import NIST_AMS_SumulationService
 from dipy_ai.tools import generate_tool_bundles_from_simulator
 from dipy_ai.config import (
     API_KEY, 
@@ -9,6 +10,8 @@ from dipy_ai.config import (
     SYSTEM_PROMPT_TOOL_SELECTION,
     SIMULATION_DATA_FOLDER,
     ANOMALY_THRESHOLDS,
+    CORRUPTION_MODE,
+    SIMULATOR_SEED,
 )
 import logging
 
@@ -21,11 +24,15 @@ workflow_log_handler.setFormatter(
 )
 workflow_logger.addHandler(workflow_log_handler)
 
-simulator = NIST_AMS_100_69_Simulator(
+simulator = NIST_AMS_100_69_CorruptModeSimulator(
     data_folder=SIMULATION_DATA_FOLDER,
+    corruption_mode=CORRUPTION_MODE,
+    seed=SIMULATOR_SEED,
 )
+runner = SimulationRunner(simulator)
+service = NIST_AMS_SumulationService(runner, simulator, seed=SIMULATOR_SEED)
 tool_bundles = generate_tool_bundles_from_simulator(
-    simulator,
+    service,
     anomaly_thresholds=ANOMALY_THRESHOLDS,
 )
 agent = WorkflowAgent(
@@ -41,16 +48,14 @@ agent = WorkflowAgent(
 )
 
 
-runner = SimulationRunner(simulator=simulator)
-runner.start()
-
-while True:
-    user_input = UserMessage(
-        message=input("You: ")
-    )
-    if user_input.message.lower() in ["exit", "quit"]:
-        print("Exiting the chat. Goodbye!")
-        runner.stop()
-        break
-    response = agent.handle_message(user_input)
-    print(f"{agent}: {response}")
+try:
+    service.start(CORRUPTION_MODE)
+    while True:
+        user_input = UserMessage(message=input("You: "))
+        if user_input.message.lower() in ["exit", "quit"]:
+            print("Exiting the chat. Goodbye!")
+            break
+        response = agent.handle_message(user_input)
+        print(f"{agent}: {response}")
+finally:
+    service.close()
