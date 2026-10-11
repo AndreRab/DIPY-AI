@@ -1,7 +1,7 @@
 from dipy_ai.agent import WorkflowAgent, UserMessage
 from dipy_ai.simulation import NIST_AMS_100_69_CorruptModeSimulator, SimulationRunner
 from dipy_ai.api.nist_ams_mode_service import NIST_AMS_SumulationService
-from dipy_ai.tools import generate_tool_bundles_from_simulator
+from dipy_ai.tools import generate_tool_bundles
 from dipy_ai.config import (
     API_KEY, 
     BASE_URL, 
@@ -31,7 +31,7 @@ simulator = NIST_AMS_100_69_CorruptModeSimulator(
 )
 runner = SimulationRunner(simulator)
 service = NIST_AMS_SumulationService(runner, simulator, seed=SIMULATOR_SEED)
-tool_bundles = generate_tool_bundles_from_simulator(
+tool_bundles = generate_tool_bundles(
     service,
     anomaly_thresholds=ANOMALY_THRESHOLDS,
 )

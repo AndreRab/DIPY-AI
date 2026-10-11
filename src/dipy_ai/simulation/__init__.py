@@ -1,4 +1,5 @@
 from dipy_ai.simulation.base_simulator import BaseSimulator, SimulatorState
+from dipy_ai.simulation.state_provider import SimulationStateProvider
 from dipy_ai.simulation.mock_simulator import MockSimulator
 from dipy_ai.simulation.simulation_runner import SimulationRunner
 from dipy_ai.simulation.nis_ams_100_69_simulator.nist_ams_100_69_simulator import NIST_AMS_100_69_Simulator

@@ -1,13 +1,14 @@
 from dipy_ai.tools import BaseTool
-from dipy_ai.simulation import BaseSimulator, SimulatorState
+from dipy_ai.simulation import SimulatorState
+from dipy_ai.simulation.state_provider import SimulationStateProvider
 
 class HistoryTool(BaseTool):
     def __init__(self, 
-                simulator: BaseSimulator,
+                state_provider: SimulationStateProvider,
                 name: str = "History Tool", 
                 description: str = "A tool for retrieving the history of the simulation."):
         super().__init__(name, description)
-        self._simulator = simulator
+        self._state_provider = state_provider
 
     def execute(self, *args, **kwargs) -> list[SimulatorState]:
-        return self._simulator.get_recent_states(n=kwargs.get("n", 10))
+        return list(self._state_provider.get_recent_states(n=kwargs.get("n", 10)))

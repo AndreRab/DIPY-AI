@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 from dipy_ai.agent import WorkflowAgent, UserMessage
 from dipy_ai.simulation import NIST_AMS_100_69_CorruptModeSimulator, SimulationRunner
 from dipy_ai.api.nist_ams_mode_service import NIST_AMS_SumulationService
-from dipy_ai.tools import generate_tool_bundles_from_simulator
+from dipy_ai.tools import generate_tool_bundles
 from dipy_ai.config import (
     API_KEY, 
     BASE_URL,
@@ -30,7 +30,7 @@ simulator = NIST_AMS_100_69_CorruptModeSimulator(
 )
 runner = SimulationRunner(simulator)
 nist_ams_service = NIST_AMS_SumulationService(runner, simulator, seed=SIMULATOR_SEED)
-tool_bundles = generate_tool_bundles_from_simulator(simulator, ANOMALY_THRESHOLDS)
+tool_bundles = generate_tool_bundles(nist_ams_service, ANOMALY_THRESHOLDS)
     
 agent = WorkflowAgent(
     agent_name="Agent",

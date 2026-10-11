@@ -1,6 +1,6 @@
 from dipy_ai.tools.base_tool import BaseTool
 from dipy_ai.tools.tool_bundles import (
-    generate_tool_bundles_from_simulator, 
+    generate_tool_bundles,
     ToolBundleEnum, 
     ToolBundle,
     build_tool_selection_schema
