@@ -11,6 +11,7 @@ SIMULATION_DATA_FOLDER = os.getenv("SIMULATION_DATA_FOLDER", "data/AMS_NIST/part
 RAG_DATA_FOLDER = os.getenv("RAG_DATA_FOLDER", "data/RAG_data/")
 RAG_CHROMA_DB = os.getenv("RAG_CHROMA_DB", "data/RAG_chroma/")
 SIMULATOR = os.getenv("SIMULATOR", "nist_ams_100_69")
+CORRUPTION_MODE = os.getenv("CORRUPTION_MODE", "laser_failure_sensor_only")
 # Possible thresholds keys: x_position, y_position, laser_power, scan_speed
 ANOMALY_THRESHOLDS: dict[str, float] = {
     "x_position": 0.25,  # mm

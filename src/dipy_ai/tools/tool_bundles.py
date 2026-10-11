@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from enum import Enum
 from collections.abc import Mapping
-from dipy_ai.simulation import BaseSimulator
+from dipy_ai.simulation.state_provider import SimulationStateProvider
 from dipy_ai.tools.base_tool import BaseTool
 from dipy_ai.tools.anomaly_tool import AnomalyTool
 from dipy_ai.tools.current_state_tool import CurrentStateTool
@@ -28,8 +28,8 @@ class ToolBundle:
 
 
 
-def generate_tool_bundles_from_simulator(
-    simulator: BaseSimulator,
+def generate_tool_bundles(
+    state_provider: SimulationStateProvider,
     anomaly_thresholds: Mapping[str, float] | None = None,
 ) -> dict[ToolBundleEnum, ToolBundle]:
     rag_tool = RAGTool()
@@ -42,8 +42,8 @@ def generate_tool_bundles_from_simulator(
                 "or whether anything unusual is happening right now."
             ),
             tools=[
-                CurrentStateTool(simulator=simulator),
-                AnomalyTool(simulator=simulator, thresholds=anomaly_thresholds),
+                CurrentStateTool(state_provider=state_provider),
+                AnomalyTool(state_provider=state_provider, thresholds=anomaly_thresholds),
             ]
         ),
 
@@ -55,10 +55,10 @@ def generate_tool_bundles_from_simulator(
                 "relates to recent process history and domain knowledge."
             ),
             tools=[
-                CurrentStateTool(simulator=simulator),
-                AnomalyTool(simulator=simulator, thresholds=anomaly_thresholds),
-                HistoryTool(simulator=simulator),
-                rag_tool,
+                CurrentStateTool(state_provider=state_provider),
+                AnomalyTool(state_provider=state_provider, thresholds=anomaly_thresholds),
+                HistoryTool(state_provider=state_provider),
+                RAGTool(),
             ]
         ),
 
@@ -71,10 +71,10 @@ def generate_tool_bundles_from_simulator(
                 "domain knowledge."
             ),
             tools=[
-                CurrentStateTool(simulator=simulator),
-                AnomalyTool(simulator=simulator, thresholds=anomaly_thresholds),
-                HistoryTool(simulator=simulator),
-                rag_tool,
+                CurrentStateTool(state_provider=state_provider),
+                AnomalyTool(state_provider=state_provider, thresholds=anomaly_thresholds),
+                HistoryTool(state_provider=state_provider),
+                RAGTool(),
                 MachineContext_NIST_AMS_100_69_Tool(),
             ]
         ),
@@ -87,8 +87,8 @@ def generate_tool_bundles_from_simulator(
                 "behavior has happened before."
             ),
             tools=[
-                CurrentStateTool(simulator=simulator),
-                HistoryTool(simulator=simulator),
+                CurrentStateTool(state_provider=state_provider),
+                HistoryTool(state_provider=state_provider),
             ]
         ),
 
@@ -101,7 +101,7 @@ def generate_tool_bundles_from_simulator(
                 "analysis of the current process state."
             ),
             tools=[
-                rag_tool,
+                RAGTool(),
                 MachineContext_NIST_AMS_100_69_Tool(),
             ]
         ),
@@ -114,10 +114,10 @@ def generate_tool_bundles_from_simulator(
                 "state, anomaly, or process problem."
             ),
             tools=[
-                CurrentStateTool(simulator=simulator),
-                AnomalyTool(simulator=simulator, thresholds=anomaly_thresholds),
-                HistoryTool(simulator=simulator),
-                rag_tool,
+                CurrentStateTool(state_provider=state_provider),
+                AnomalyTool(state_provider=state_provider, thresholds=anomaly_thresholds),
+                HistoryTool(state_provider=state_provider),
+                RAGTool(),
                 MachineContext_NIST_AMS_100_69_Tool(),
             ]
         ),

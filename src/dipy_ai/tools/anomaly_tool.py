@@ -2,17 +2,19 @@ import math
 from collections.abc import Mapping
 
 from dipy_ai.tools import BaseTool
-from dipy_ai.simulation import BaseSimulator
+from dipy_ai.simulation.state_provider import SimulationStateProvider
 
 
 class AnomalyTool(BaseTool):
+    """Analyze NIST telemetry fields from any compatible state provider."""
+
     def __init__(self, 
-                simulator: BaseSimulator,
+                state_provider: SimulationStateProvider,
                 thresholds: Mapping[str, float] | None = None,
                 name: str = "Anomaly Tool", 
-                description: str = "A tool for detecting anomalies in the data."):
+                description: str = "A tool for detecting anomalies in NIST telemetry."):
         super().__init__(name, description)
-        self._simulator = simulator
+        self._state_provider = state_provider
         self._thresholds = dict(thresholds or {})
 
         valid_thresholds = {"x_position", "y_position", "laser_power", "scan_speed"}
@@ -30,7 +32,7 @@ class AnomalyTool(BaseTool):
             self._thresholds[name] = float(threshold)
 
     def execute(self, **kwargs) -> dict:
-        state = self._simulator.get_current_state()
+        state = self._state_provider.get_current_state()
         if state is None:
             return {"status": "no_data", "metrics": []}
 

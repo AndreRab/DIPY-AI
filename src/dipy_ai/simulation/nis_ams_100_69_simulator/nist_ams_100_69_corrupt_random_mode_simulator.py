@@ -1,7 +1,7 @@
-from dipy_ai.simulation.nist_ams_100_69_simulator_corruptions import (
+from dipy_ai.simulation.nis_ams_100_69_simulator.nist_ams_100_69_simulator_corruptions import (
     CorruprionType, CorruptionTypeToClassMap
 )
-from dipy_ai.simulation.nist_ams_100_69_simulator import (
+from dipy_ai.simulation.nis_ams_100_69_simulator.nist_ams_100_69_simulator import (
     NIST_AMS_100_69_SimulatorState, 
     NIST_AMS_100_69_Simulator
 )
@@ -10,7 +10,7 @@ from random import Random
 from pathlib import Path
 
         
-class NIST_AMS_100_69_CorruptSimulator(NIST_AMS_100_69_Simulator):
+class NIST_AMS_100_69_CorruptRandomSimulator(NIST_AMS_100_69_Simulator):
     def __init__(self, data_folder: str | Path, 
                  corruption_types: list[CorruprionType] | None = None, 
                  max_corruption_type_num: int = len(CorruprionType),

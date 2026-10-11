@@ -63,9 +63,9 @@ export const ChatComponent = () => {
     }
 
     return (
-        <section className="flex min-h-svh items-center justify-center bg-muted/40 p-4">
-            <Card className="flex w-full max-w-2xl flex-col shadow-sm">
-                <CardHeader className="border-b">
+        <section className="flex h-[calc(100dvh-4rem)] min-h-0 min-w-0 p-4 lg:h-full">
+            <Card className="flex h-full min-h-0 w-full flex-col overflow-hidden shadow-sm">
+                <CardHeader className="shrink-0 border-b">
                     <div className="flex items-center gap-3">
                         <div className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
                             <Bot className="size-5" />
@@ -77,7 +77,7 @@ export const ChatComponent = () => {
                     </div>
                 </CardHeader>
 
-                <CardContent className="flex max-h-[60vh] min-h-64 flex-col gap-4 overflow-y-auto">
+                <CardContent className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain">
                     {prompts.length === 0 && !mutation.isPending && (
                         <p className="m-auto text-center text-sm text-muted-foreground">
                             Type a question below and press Enter.
@@ -135,7 +135,7 @@ export const ChatComponent = () => {
                     <div ref={bottomRef} />
                 </CardContent>
 
-                <CardFooter className="gap-2 border-t bg-muted/30 py-4">
+                <CardFooter className="shrink-0 gap-2 border-t bg-muted/30 py-4">
                     <Input
                         type="text"
                         placeholder="Enter the text"

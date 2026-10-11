@@ -10,3 +10,4 @@ data/RAG_chroma/
 .venv
 
 .env
+.DS_Store
