@@ -58,7 +58,7 @@ def generate_tool_bundles(
                 CurrentStateTool(state_provider=state_provider),
                 AnomalyTool(state_provider=state_provider, thresholds=anomaly_thresholds),
                 HistoryTool(state_provider=state_provider),
-                RAGTool(),
+                rag_tool,
             ]
         ),
 
@@ -74,7 +74,7 @@ def generate_tool_bundles(
                 CurrentStateTool(state_provider=state_provider),
                 AnomalyTool(state_provider=state_provider, thresholds=anomaly_thresholds),
                 HistoryTool(state_provider=state_provider),
-                RAGTool(),
+                rag_tool,
                 MachineContext_NIST_AMS_100_69_Tool(),
             ]
         ),
@@ -101,7 +101,7 @@ def generate_tool_bundles(
                 "analysis of the current process state."
             ),
             tools=[
-                RAGTool(),
+                rag_tool,
                 MachineContext_NIST_AMS_100_69_Tool(),
             ]
         ),
@@ -117,7 +117,7 @@ def generate_tool_bundles(
                 CurrentStateTool(state_provider=state_provider),
                 AnomalyTool(state_provider=state_provider, thresholds=anomaly_thresholds),
                 HistoryTool(state_provider=state_provider),
-                RAGTool(),
+                rag_tool,
                 MachineContext_NIST_AMS_100_69_Tool(),
             ]
         ),
