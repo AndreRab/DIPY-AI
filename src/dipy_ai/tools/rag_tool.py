@@ -24,6 +24,7 @@ class RAGTool(BaseTool):
         if not self._vector_store.get(limit=1, include=[])["ids"]:
             self._text_chunks = self.load_pdfs()
             self._vector_store.add_documents(self._text_chunks)
+            
     def load_pdfs(self):
         pdf_list = list(Path(RAG_DATA_FOLDER).glob("*.pdf"))
         text_chunks = []
@@ -37,6 +38,7 @@ class RAGTool(BaseTool):
                 print(f"Error loading PDF file {i}: {e}")
                 continue
         return text_chunks
+    
     def execute(self, *args, **kwargs):
         query = kwargs.get("query", "")
         if not query:
