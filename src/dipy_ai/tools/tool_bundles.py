@@ -32,7 +32,7 @@ def generate_tool_bundles(
     state_provider: SimulationStateProvider,
     anomaly_thresholds: Mapping[str, float] | None = None,
 ) -> dict[ToolBundleEnum, ToolBundle]:
-
+    rag_tool = RAGTool()
     return {
         ToolBundleEnum.CURRENT_SITUATION: ToolBundle(
             name=ToolBundleEnum.CURRENT_SITUATION,

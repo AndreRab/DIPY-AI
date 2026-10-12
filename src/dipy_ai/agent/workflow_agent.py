@@ -117,11 +117,18 @@ class WorkflowAgent(BaseAgent):
 
         return {"active_tool_bundle": selected_bundle}
 
+    def _last_user_message(self, state: WorkflowState) -> str:
+        for message in reversed(state["history"]):
+            if message.get("role") == "user":
+                return message.get("content", "")
+        return ""
+
     def _execute_tool_bundle(self, state: WorkflowState) -> dict:
         selected_bundle = state["active_tool_bundle"]
         if selected_bundle is None:
             return {"tool_bundle_results": None}
         bundle = self._tool_bundles.get(selected_bundle)
+        query = self._last_user_message(state)
         if self._logger is not None:
             self._logger.info(
                 "Executing tool bundle %s with tools: %s",
@@ -130,7 +137,7 @@ class WorkflowAgent(BaseAgent):
             )
         with ThreadPoolExecutor(max_workers=max(1, len(bundle.tools))) as executor:
             futures = {
-                tool.name: executor.submit(tool.execute, n=10)
+                tool.name: executor.submit(tool.execute, n=10, query=query)
                 for tool in bundle.tools
             }
             results = {
