@@ -1,5 +1,5 @@
 from pathlib import Path
-from dipy_ai.config import EMBEDDING_API_KEY, EMBEDDING_MODEL, RAG_DATA_FOLDER, RAG_CHROMA_DB
+from dipy_ai.config import GOOGLE_EMBEDDING_API_KEY, GOOGLE_EMBEDDING_MODEL, RAG_DATA_FOLDER, RAG_CHROMA_DB
 from dipy_ai.tools import BaseTool
 from langchain_community.document_loaders import   PyMuPDFLoader
 from langchain_text_splitters import CharacterTextSplitter
@@ -11,7 +11,7 @@ class RAGTool(BaseTool):
                 name: str = "RAG Tool", 
                 description: str = "A tool for retrieving information using Retrieval-Augmented Generation."):
         super().__init__(name, description)
-        self._embedding = GoogleGenerativeAIEmbeddings(model=EMBEDDING_MODEL, api_key=EMBEDDING_API_KEY)
+        self._embedding = GoogleGenerativeAIEmbeddings(model=GOOGLE_EMBEDDING_MODEL, api_key=GOOGLE_EMBEDDING_API_KEY)
         rag_data_folder = Path(RAG_DATA_FOLDER)
         if not any(rag_data_folder.glob("*.pdf")):
             raise FileNotFoundError(f"No PDF files found in RAG data folder: {rag_data_folder}")

@@ -19,8 +19,8 @@ ANOMALY_THRESHOLDS: dict[str, float] = {
 }
 
 SIMULATOR_SEED = int(os.getenv("SIMULATOR_SEED", 42))
-EMBEDDING_MODEL = "gemini-embedding-2"
-EMBEDDING_API_KEY = os.getenv("EMBEDDING_API_KEY")
+GOOGLE_EMBEDDING_MODEL = "gemini-embedding-2"
+GOOGLE_EMBEDDING_API_KEY = os.getenv("GOOGLE_EMBEDDING_API_KEY")
 API_KEY = os.getenv("GROQ_API_KEY")
 BASE_URL = "https://api.groq.com/openai/v1"
 MODEL_NAME = "openai/gpt-oss-20b"
