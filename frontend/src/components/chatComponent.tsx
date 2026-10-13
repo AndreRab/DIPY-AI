@@ -21,7 +21,12 @@ interface conversation {
     response?: string
 }
 
-export const ChatComponent = () => {
+interface ChatComponentProps {
+    showSimulation: boolean
+    onToggleSimulation: () => void
+}
+
+export const ChatComponent = ({ showSimulation, onToggleSimulation }: ChatComponentProps) => {
     const [prompts, setPrompts] = useState<conversation[]>([])
     const mutation = useMutation({
         mutationFn: invokeAgent,
@@ -63,17 +68,22 @@ export const ChatComponent = () => {
     }
 
     return (
-        <section className="flex h-[calc(100dvh-4rem)] min-h-0 min-w-0 p-4 lg:h-full">
+        <section className="flex h-dvh min-h-0 min-w-0 p-4 lg:h-full">
             <Card className="flex h-full min-h-0 w-full flex-col overflow-hidden shadow-sm">
                 <CardHeader className="shrink-0 border-b">
-                    <div className="flex items-center gap-3">
-                        <div className="flex size-9 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                            <Bot className="size-5" />
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                                <Bot className="size-5" />
+                            </div>
+                            <div className="min-w-0">
+                                <CardTitle className="text-lg">Chat with the AI</CardTitle>
+                                <CardDescription>Ask about the current state of the process.</CardDescription>
+                            </div>
                         </div>
-                        <div>
-                            <CardTitle className="text-lg">Chat with the AI</CardTitle>
-                            <CardDescription>Ask about the current state of the process.</CardDescription>
-                        </div>
+                        <Button className="shrink-0" variant="outline" aria-expanded={showSimulation} onClick={onToggleSimulation}>
+                            {showSimulation ? "Hide simulation" : "Simulation"}
+                        </Button>
                     </div>
                 </CardHeader>
 

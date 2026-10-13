@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import ky from "ky"
 import { backendUrl } from "@/agent/agent"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 type Camera = { x: number; y: number; scale: number; zoom: number }
 
@@ -198,8 +199,13 @@ export function SimulationPanel() {
         onSuccess: snapshot => client.setQueryData(["simulation"], snapshot),
     })
     const busy = start.isPending || stop.isPending || resume.isPending
-    return <aside className="flex h-full min-h-0 flex-col gap-3 overflow-hidden p-4" aria-label="Simulation panel">
-        <div className="shrink-0"><h2 className="text-lg font-semibold">Simulation</h2><p className="text-sm text-muted-foreground">Select a mode and start a new run.</p></div>
+    return <aside className="h-full min-h-0 p-4" aria-label="Simulation panel">
+        <Card className="flex h-full min-h-0 flex-col overflow-hidden shadow-sm">
+        <CardHeader className="shrink-0 border-b">
+            <CardTitle className="text-lg">Simulation</CardTitle>
+            <CardDescription>Select a mode and start a new run.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain">
         <div className="shrink-0 rounded-xl border bg-background p-3">
             <label htmlFor="corruption-mode" className="text-sm font-medium">Corruption mode</label>
             <select id="corruption-mode" value={chosen ?? ""} onChange={e => setMode(e.target.value)} disabled={!options.length || busy || data?.running} className="mt-2 w-full rounded-md border bg-background px-3 py-2 text-sm">
@@ -225,12 +231,14 @@ export function SimulationPanel() {
         <LaserMap key={data?.run_id ?? "idle"} states={data?.states ?? []} selected={inspected?.state ?? null} />
         <div className="flex shrink-0 items-center justify-between"><h3 className="text-sm font-semibold">States · {data?.running ? "LIVE" : data?.run_id ? "Stopped" : "Idle"}</h3>{selected !== null && <button onClick={() => setSelection(null)} className="text-xs underline">Clear selection</button>}</div>
         <p className="text-xs text-muted-foreground">Last 100 steps of the current run.</p>
-        <div ref={listRef} onScroll={rememberPosition} className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain [overflow-anchor:none]">
+        <div ref={listRef} onScroll={rememberPosition} className="min-h-0 space-y-2 [overflow-anchor:none]">
             {!data?.states.length && <p className="py-5 text-center text-sm text-muted-foreground">Press Start to receive states.</p>}
             {rows.map(s => <div key={`${data?.run_id}-${s.step}`} ref={selected === s.step ? selectedRowRef : undefined} className="rounded-lg border bg-background">
                 <button className="flex w-full items-center justify-between p-3 text-sm" aria-expanded={selected === s.step} onClick={() => setSelection(selected === s.step ? null : { run: data!.run_id!, state: s })}><strong>{selected === s.step ? "▾" : "▸"} Step {s.step}</strong><span className="text-xs text-muted-foreground">{format((s.values.laser_power_w as Pair).measured)} W</span></button>
                 {selected === s.step && <div className="overflow-x-auto border-t p-3"><table className="w-full text-xs"><thead><tr className="text-left text-muted-foreground"><th className="pb-2">Parameter</th><th>Commanded</th><th>Measured</th></tr></thead><tbody>{Object.entries(s.values).map(([key, value]) => <tr key={key} className="border-t"><td className="py-2 pr-2">{fields[key] ?? key}</td>{typeof value === "object" && value !== null ? <><td className="pr-2">{format(value.command)}</td><td>{format(value.measured)}</td></> : <><td className="pr-2 text-muted-foreground">—</td><td>{format(value)}</td></>}</tr>)}</tbody></table></div>}
             </div>)}
         </div>
+        </CardContent>
+        </Card>
     </aside>
 }
