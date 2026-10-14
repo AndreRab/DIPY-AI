@@ -1,27 +1,33 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 
-from dipy_ai.agent import WorkflowAgent, UserMessage
-from dipy_ai.simulation import NIST_AMS_100_69_CorruptModeSimulator, SimulationRunner
+from dipy_ai.agent import UserMessage, WorkflowAgent
+from dipy_ai.api.db.core import get_db
+from dipy_ai.api.enum.role import Role
+from dipy_ai.api.model.conversation import Conversation
+from dipy_ai.api.model.message import Message
 from dipy_ai.api.nist_ams_mode_service import NIST_AMS_SumulationService
-from dipy_ai.tools import generate_tool_bundles
+from dipy_ai.api.router.conversations import router as conversations_router
 from dipy_ai.config import (
-    API_KEY, 
-    BASE_URL,
-    MODEL_NAME, 
-    ANOMALY_THRESHOLDS,
-    ALLOWED_BACKEND_ORIGINS,
-    ALLOWED_BACKEND_METHODS,
     ALLOWED_BACKEND_HEADERS,
+    ALLOWED_BACKEND_METHODS,
+    ALLOWED_BACKEND_ORIGINS,
+    ANOMALY_THRESHOLDS,
+    API_KEY,
+    BASE_URL,
+    CORRUPTION_MODE,
+    MODEL_NAME,
     SIMULATION_DATA_FOLDER,
+    SIMULATOR_SEED,
     SYSTEM_PROMPT_FINAL_ANSWER,
     SYSTEM_PROMPT_TOOL_SELECTION,
-    SIMULATOR_SEED,
-    CORRUPTION_MODE,
 )
+from dipy_ai.simulation import NIST_AMS_100_69_CorruptModeSimulator, SimulationRunner
+from dipy_ai.tools import generate_tool_bundles
 
 simulator = NIST_AMS_100_69_CorruptModeSimulator(
     data_folder=SIMULATION_DATA_FOLDER,
@@ -31,7 +37,7 @@ simulator = NIST_AMS_100_69_CorruptModeSimulator(
 runner = SimulationRunner(simulator)
 nist_ams_service = NIST_AMS_SumulationService(runner, simulator, seed=SIMULATOR_SEED)
 tool_bundles = generate_tool_bundles(nist_ams_service, ANOMALY_THRESHOLDS)
-    
+
 agent = WorkflowAgent(
     agent_name="Agent",
     api_key=API_KEY,
@@ -59,15 +65,46 @@ app.add_middleware(
     allow_methods=ALLOWED_BACKEND_METHODS,
     allow_headers=ALLOWED_BACKEND_HEADERS,
 )
+app.include_router(conversations_router)
 
 
 class InvokeRequest(BaseModel):
     prompt: str
+    conversation_id: int | None = None
 
 
 @app.post("/invoke")
-def invoke(request: InvokeRequest):
+def invoke(request: InvokeRequest, db: Session = Depends(get_db)):
+    if request.conversation_id is not None:
+        conversation = db.get(Conversation, request.conversation_id)
+        if not conversation:
+            raise HTTPException(status_code=404, detail="Conversation not found")
+    else:
+        conversation = Conversation(title="New Conversation")
+        db.add(conversation)
+        db.commit()
+        db.refresh(conversation)
+
+    db.add(
+        Message(
+            content=request.prompt,
+            role=Role.USER,
+            conversation=conversation,
+        )
+    )
+    db.commit()
+
     response = agent.handle_message(UserMessage(message=request.prompt))
+
+    db.add(
+        Message(
+            content=response,
+            role=Role.ASSISTANT,
+            conversation=conversation,
+        )
+    )
+    db.commit()
+
     return {"response": response}
 
 
@@ -80,11 +117,14 @@ def simulation_modes():
 def simulation_state():
     return nist_ams_service.snapshot()
 
+
 class IntervalRequest(BaseModel):
     interval_ms: int = Field(default=1000, ge=50, le=2000, strict=True)
 
+
 class StartRequest(IntervalRequest):
     mode: str
+
 
 @app.post("/simulation/start")
 def simulation_start(request: StartRequest):
