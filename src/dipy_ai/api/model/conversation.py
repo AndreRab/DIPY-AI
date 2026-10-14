@@ -1,17 +1,22 @@
-from typing import List
+from __future__ import annotations
 
-from sqlalchemy.orm import Mapped, relationship
-from dipy_ai.api.db.base import Base
-from sqlalchemy import Column, Integer, DateTime, String
 from datetime import datetime
+from typing import TYPE_CHECKING, List
 
-from dipy_ai.api.model.message import Message
+from sqlalchemy import Column, DateTime, Integer, String
+from sqlalchemy.orm import Mapped, relationship
+
+from dipy_ai.api.db.base import Base
+
+if TYPE_CHECKING:
+    from dipy_ai.api.model.message import Message
+
 
 class Conversation(Base):
     __tablename__ = "conversations"
+
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, index=True)
     title = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now)
-    messages : Mapped[List[Message]] = relationship("Message", back_populates="conversation")
+    messages: Mapped[List[Message]] = relationship("Message", back_populates="conversation")
