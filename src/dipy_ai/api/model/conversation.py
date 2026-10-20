@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 class Conversation(Base):
     __tablename__ = "conversations"
 
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now)
+    id  : Mapped[int] = Column(Integer, primary_key=True, index=True)
+    title : Mapped[str] = Column(String, nullable=False)
+    created_at  : Mapped[datetime] = Column(DateTime, default=datetime.now)
+    updated_at : Mapped[datetime] = Column(DateTime, default=datetime.now)
     messages: Mapped[List[Message]] = relationship("Message", back_populates="conversation")
