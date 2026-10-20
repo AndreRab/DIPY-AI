@@ -3,13 +3,8 @@ from contextlib import asynccontextmanager
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from sqlalchemy.orm import Session
 
-from dipy_ai.agent import UserMessage, WorkflowAgent
-from dipy_ai.api.db.core import get_db
-from dipy_ai.api.enum.role import Role
-from dipy_ai.api.model.conversation import Conversation
-from dipy_ai.api.model.message import Message
+from dipy_ai.agent import  WorkflowAgent
 from dipy_ai.api.nist_ams_mode_service import NIST_AMS_SumulationService
 from dipy_ai.api.router.conversations import router as conversations_router
 from dipy_ai.config import (
@@ -73,39 +68,39 @@ class InvokeRequest(BaseModel):
     conversation_id: int | None = None
 
 
-@app.post("/invoke")
-def invoke(request: InvokeRequest, db: Session = Depends(get_db)):
-    if request.conversation_id is not None:
-        conversation = db.get(Conversation, request.conversation_id)
-        if not conversation:
-            raise HTTPException(status_code=404, detail="Conversation not found")
-    else:
-        conversation = Conversation(title="New Conversation")
-        db.add(conversation)
-        db.commit()
-        db.refresh(conversation)
+# @app.post("/invoke")
+# def invoke(request: InvokeRequest, db: Session = Depends(get_db)):
+#     if request.conversation_id is not None:
+#         conversation = db.get(Conversation, request.conversation_id)
+#         if not conversation:
+#             raise HTTPException(status_code=404, detail="Conversation not found")
+#     else:
+#         conversation = Conversation(title="New Conversation")
+#         db.add(conversation)
+#         db.commit()
+#         db.refresh(conversation)
 
-    db.add(
-        Message(
-            content=request.prompt,
-            role=Role.USER,
-            conversation=conversation,
-        )
-    )
-    db.commit()
+#     db.add(
+#         Message(
+#             content=request.prompt,
+#             role=Role.USER,
+#             conversation=conversation,
+#         )
+#     )
+#     db.commit()
 
-    response = agent.handle_message(UserMessage(message=request.prompt))
+#     response = agent.handle_message(UserMessage(message=request.prompt))
 
-    db.add(
-        Message(
-            content=response,
-            role=Role.ASSISTANT,
-            conversation=conversation,
-        )
-    )
-    db.commit()
+#     db.add(
+#         Message(
+#             content=response,
+#             role=Role.ASSISTANT,
+#             conversation=conversation,
+#         )
+#     )
+#     db.commit()
 
-    return {"response": response}
+#     return {"response": response}
 
 
 @app.get("/simulation/modes")
