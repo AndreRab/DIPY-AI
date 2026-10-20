@@ -1,9 +1,7 @@
 from collections.abc import Generator
+from pathlib import Path
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session
-from dipy_ai.api.db.base import Base
-from dipy_ai.api.model.conversation import Conversation  # noqa: F401
-from dipy_ai.api.model.message import Message  # noqa: F401
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -13,10 +11,17 @@ def get_db() -> Generator[Session, None, None]:
 class Base(DeclarativeBase):
     pass
 
+DATABASE_PATH = Path(__file__).resolve().parents[3] / "var" / "dipy_ai.db"
+
 engine = create_engine(
-    "sqlite:///var/dipy_ai.db",
+    f"sqlite:///{DATABASE_PATH}",
     connect_args={"check_same_thread": False},
     echo=False,
 )
 
-Base.metadata.create_all(engine)
+
+def init_db():
+    from dipy_ai.api import models  # noqa: F401
+
+    DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    Base.metadata.create_all(engine)

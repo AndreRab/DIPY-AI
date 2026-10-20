@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+
 from typing import TYPE_CHECKING, List
 
-from sqlalchemy import DateTime, Integer, String
+from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, relationship ,mapped_column
 
 from dipy_ai.api.database import Base
@@ -24,7 +24,7 @@ class Message(Base):
     __tablename__ = "messages"
 
     id : Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    conversation_id : Mapped[int] = mapped_column(Integer, index=True, nullable=False)
+    conversation_id : Mapped[int] = mapped_column(Integer, ForeignKey("conversations.id"), index=True, nullable=False)
     content : Mapped[str] = mapped_column(String, nullable=False)
     role : Mapped[Role] = mapped_column(Enum(Role), nullable=False, default=Role.USER)
     created_at : Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.now)

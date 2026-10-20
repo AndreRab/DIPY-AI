@@ -1,42 +1,65 @@
-from fastapi import APIRouter
-from pydantic import BaseModel
+from datetime import datetime
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, Request
+from pydantic import BaseModel, PositiveInt, StringConstraints
+from sqlalchemy.orm import Session
+
+from dipy_ai.api.database import get_db
+from dipy_ai.api.chat_service import ChatService, ConversationNotFound, GenerationFailed, GenerationTimeout
+from dipy_ai.api.enum.role import Role
 
 router = APIRouter(
-    prefix="/conversation",
     tags=["conversation"],
 )
 
-class InvokeRequesr(BaseModel):
-    prompt : str
-    conversation_id : str | None = None
+class InvokeRequest(BaseModel):
+    prompt : Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=1000)]
+    conversation_id : PositiveInt | None = None
     
 class InvokeResponse(BaseModel):
     response : str
-    conversation_id : str
+    conversation_id : int
 
 class ConversationResponse(BaseModel):
-    conversation_id : str
+    model_config = {"from_attributes": True}
+
+    id : int
     title : str 
-    created_at : str
-    updated_at : str
+    created_at : datetime
+    updated_at : datetime
 
 class MessageResponse(BaseModel):
-    id : str
-    conversation_id : str
-    role : str
+    model_config = {"from_attributes": True}
+
+    id : int
+    conversation_id : int
+    role : Role
     content : str
-    created_at : str
+    created_at : datetime
     
 
-@router.get("/list", response_model=list[ConversationResponse])
-async def list_conversations():
-    return await list_conversations()
+def get_chat_service(request: Request, db: Session = Depends(get_db)):
+    return ChatService(db=db, agent=request.app.state.agent)
 
-@router.get("/{conversation_id}/messages", response_model=list[MessageResponse])
-async def get_messages(conversation_id : int):
-    return await get_messages(conversation_id)
+
+@router.get("/conversations", response_model=list[ConversationResponse])
+def list_conversations(chat_service : ChatService = Depends(get_chat_service)):
+    return chat_service.list_conversations()
+
+@router.get("/conversations/{conversation_id}/messages", response_model=list[MessageResponse])
+def get_messages(conversation_id : PositiveInt, chat_service : ChatService = Depends(get_chat_service)):
+    try:
+        return chat_service.get_messages(conversation_id)
+    except ConversationNotFound as exc:
+        raise HTTPException(status_code=404, detail="Conversation not found") from exc
 
 @router.post("/invoke", response_model=InvokeResponse)
-async def invoke(request : InvokeRequesr):
-    response = await invoke(request.prompt, request.conversation_id)
-    return InvokeResponse(response=response, conversation_id=str(response.conversation_id))
+def invoke(request : InvokeRequest, chat_service : ChatService = Depends(get_chat_service)):
+    try:
+        return chat_service.invoke(request.prompt, request.conversation_id)
+    except ConversationNotFound as exc:
+        raise HTTPException(status_code=404, detail="Conversation not found") from exc
+    except GenerationTimeout as exc:
+        raise HTTPException(status_code=504, detail="Response generation timed out") from exc
+    except GenerationFailed as exc:
+        raise HTTPException(status_code=502, detail="Response generation failed") from exc

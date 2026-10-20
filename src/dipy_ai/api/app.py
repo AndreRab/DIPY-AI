@@ -6,7 +6,8 @@ from pydantic import BaseModel, Field
 
 from dipy_ai.agent import  WorkflowAgent
 from dipy_ai.api.nist_ams_mode_service import NIST_AMS_SumulationService
-from dipy_ai.api.router.conversations import router as conversations_router
+from dipy_ai.api.conversation import router as conversations_router
+from dipy_ai.api.database import init_db
 from dipy_ai.config import (
     ALLOWED_BACKEND_HEADERS,
     ALLOWED_BACKEND_METHODS,
@@ -48,6 +49,8 @@ agent = WorkflowAgent(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     try:
+        init_db()
+        app.state.agent = agent
         yield
     finally:
         nist_ams_service.close()

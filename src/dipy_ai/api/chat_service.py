@@ -1,86 +1,83 @@
 
-from typing import List
-from fastapi import Depends
+from datetime import datetime
+from openai import APITimeoutError
+from sqlalchemy.orm import Session
 
-from dipy_ai.api.app import agent
+from dipy_ai.agent.workflow_agent import WorkflowAgent
 from dipy_ai.agent.base_agent import UserMessage
-from dipy_ai.api.conversation import ConversationResponse, InvokeResponse, MessageResponse
-from dipy_ai.api.database import get_db
 from dipy_ai.api.enum.role import Role
 from dipy_ai.api.models import Conversation, Message
 
+class ConversationNotFound(Exception):
+    pass
 
-async def list_conversations(db = Depends(get_db)):
-    list = db.select(Conversation).all().order_by(Conversation.updated_at.desc(),Conversation.id.desc()).all()
-    response : List[ConversationResponse] = []
-    for conversation in list:
-        response.append(
-            ConversationResponse(
-                conversation_id = str(conversation.id),
-                title = conversation.title,
-                created_at = str(conversation.created_at),
-                updated_at = str(conversation.updated_at)
-            )
-        )    
 
-    return response
-async def get_messages(conversation_id : int,db = Depends(get_db)):
-    if conversation_id is None or conversation_id < 1:
-        return None
-    data = db.select(Conversation).where(Conversation.id == conversation_id).order_by(Conversation.id.desc()).all()
-    response : List[MessageResponse] = []
-    for conversation in data:
-        for message in conversation.messages:
-            response.append(
-                MessageResponse(
-                    id = str(message.id),
-                    conversation_id = str(message.conversation_id),
-                    role = message.role.name,
-                    content = message.content,
-                    created_at = str(message.created_at)
-                )
-            )
-    return response
+class GenerationFailed(Exception):
+    pass
 
-async def invoke(prompt : str, conversation_id : int | None = None, db = Depends(get_db)):
-    
-    if conversation_id is None or conversation_id < 1:
-        new_conversation = Conversation(title=prompt[:20])
-        db.add(new_conversation)
-        db.commit()
-        db.refresh(new_conversation)
-        conversation_id = new_conversation.id
-    else:
-        Conversation = db.get(Conversation, conversation_id)
-        if not Conversation:
-            new_conversation = Conversation(title=prompt[:20])
-            db.add(new_conversation)
-            db.commit()
-            db.refresh(new_conversation)
-            conversation_id = new_conversation.id
 
-    db.add(
-        Message(
-            content=prompt.strip(),
-            role=Role.USER,
-            conversation_id=conversation_id,
-        )
-    )
-    db.commit() 
-    
-    response = agent.handle_message(UserMessage(message=prompt))
-    
-    db.add(
-        Message(
-            content=response,
-            role=Role.ASSISTANT,
-            conversation_id=conversation_id,
-        )
-    )
-    db.commit()
-    
-    return InvokeResponse(
-        response=response,
-        conversation_id=str(conversation_id)    
-    )
-    
+class GenerationTimeout(GenerationFailed):
+    pass
+
+class ChatService:
+    def __init__(self, db : Session,agent : WorkflowAgent):
+        self.db = db
+        self.agent = agent
+    def list_conversations(self):
+        return self.db.query(Conversation).order_by(Conversation.updated_at.desc(),Conversation.id.desc()).all()
+
+    def get_messages(self, conversation_id : int):
+        if self.db.get(Conversation, conversation_id) is None:
+            raise ConversationNotFound()
+        return self.db.query(Message).filter(
+            Message.conversation_id == conversation_id
+        ).order_by(Message.id.asc()).all()
+
+    def invoke(self, prompt : str, conversation_id : int | None = None):
+        history = []
+        if conversation_id is not None:
+            history = [
+                {"role": message.role.value, "content": message.content}
+                for message in self.get_messages(conversation_id)
+            ]
+        # Finish reading before waiting for the model; history now contains plain values.
+        self.db.rollback()
+
+        try:
+            response = self.agent.handle_message(UserMessage(message=prompt), history)
+            if not isinstance(response, str) or not response.strip():
+                raise ValueError("The model returned an empty response")
+        except (APITimeoutError, TimeoutError) as exc:
+            raise GenerationTimeout() from exc
+        except Exception as exc:
+            raise GenerationFailed() from exc
+
+        try:
+            if conversation_id is None:
+                conversation = Conversation(title=prompt[:20])
+                self.db.add(conversation)
+                self.db.flush()
+                conversation_id = conversation.id
+            else:
+                conversation = self.db.get(Conversation, conversation_id)
+                if conversation is None:
+                    raise ConversationNotFound()
+
+            conversation.updated_at = datetime.now()
+            self.db.add_all([
+                Message(
+                    content=prompt,
+                    role=Role.USER,
+                    conversation_id=conversation_id,
+                ),
+                Message(
+                    content=response,
+                    role=Role.ASSISTANT,
+                    conversation_id=conversation_id,
+                ),
+            ])
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            raise
+        return {"response": response, "conversation_id": conversation_id}
