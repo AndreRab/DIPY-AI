@@ -6,6 +6,7 @@ dist/
 wheels/
 *.egg-info
 data/RAG_chroma/
+var/
 
 # Virtual environments
 .venv

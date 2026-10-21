@@ -671,6 +671,7 @@ dependencies = [
     { name = "pandas" },
     { name = "pymupdf" },
     { name = "pypdf" },
+    { name = "sqlalchemy" },
     { name = "uvicorn" },
 ]
 
@@ -688,6 +689,7 @@ requires-dist = [
     { name = "pandas", specifier = ">=3.0.6" },
     { name = "pymupdf", specifier = ">=1.28.2" },
     { name = "pypdf", specifier = ">=6.19.0" },
+    { name = "sqlalchemy", specifier = ">=2.1.4" },
     { name = "uvicorn", specifier = ">=0.34.0" },
 ]
 
