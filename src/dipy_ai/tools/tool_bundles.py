@@ -123,8 +123,8 @@ def generate_tool_bundles(
         ),
     }
     
-def build_tool_selection_schema(allowed_values: list[str]) -> dict:
-    return {
+def build_tool_selection_schema(allowed_values: list[str], *, include_query: bool = False) -> dict:
+    result = {
         "type": "json_schema",
         "json_schema": {
             "name": "tool_bundle_selection",
@@ -142,3 +142,8 @@ def build_tool_selection_schema(allowed_values: list[str]) -> dict:
             },
         },
     }
+    if include_query:
+        schema = result["json_schema"]["schema"]
+        schema["properties"]["query"] = {"type": "string", "minLength": 1}
+        schema["required"].append("query")
+    return result

@@ -31,27 +31,34 @@ src/dipy_ai/
 └── api/
     ├── __init__.py
     ├── app.py                    # FastAPI assembly and resource lifecycle
-    ├── database.py               # Base, engine, sessions, table initialization
-    ├── models.py                 # Conversation, Message, Role
-    ├── conversations.py          # HTTP schemas and conversation routes
-    ├── chat_service.py           # reading and continuing conversations
-    └── nist_ams_mode_service.py  # existing simulation logic
+    ├── infrastructure/
+    │   ├── __init__.py
+    │   ├── database.py           # Base, engine, sessions, table initialization
+    │   └── models.py             # Conversation, Message, Role
+    ├── routers/
+    │   ├── __init__.py
+    │   ├── conversations.py      # HTTP schemas and conversation routes
+    │   └── simulation.py         # simulation schemas and routes
+    └── services/
+        ├── __init__.py
+        ├── chat_service.py       # reading and continuing conversations
+        └── nist_ams_mode_service.py  # simulation logic
 ```
 
 There is no separate `schemas.py` yet. Request and response schemas live at the
-start of `conversations.py`, followed by routes. Extract them when their number
-justifies a separate module. Simulation endpoints can remain in `app.py`; moving
-them is not required to implement conversation history.
+start of `routers/conversations.py`, followed by routes. Extract them when their number
+justifies a separate module. All HTTP handlers live in `routers/`; application logic lives in `services/`.
+`app.py` assembles the application and manages resource lifetimes.
 
 ## File responsibilities
 
 ### `api/app.py`: application assembly
 
-- Creates `FastAPI`, configures CORS, and includes the conversation router.
+- Creates `FastAPI`, configures CORS, and includes the conversation and simulation routers.
 - Initializes the database, simulator, tools, agent, and `ChatService` in `lifespan`.
 - Holds application resources, for example in `app.state`.
 - Closes simulation resources and disposes of the engine on shutdown.
-- Keeps existing simulation endpoints until there is a reason to extract them.
+- Contains no HTTP handlers; simulation endpoints live in `routers/simulation.py`.
 
 The `/invoke` handler moves into the router. Table creation and external resource
 initialization must not happen as side effects of importing modules.
@@ -67,7 +74,7 @@ session history and passes it to the agent. Connecting the CLI to the database i
 optional for this task. Put executable code in `main()` behind an
 `if __name__ == "__main__"` guard.
 
-### `api/database.py`: connection and sessions
+### `api/infrastructure/database.py`: connection and sessions
 
 - Declares the SQLAlchemy `Base`.
 - Provides engine creation using `DATABASE_URL`.
@@ -89,7 +96,7 @@ project root in configuration. Create the directory at startup and ignore `var/`
 in Git. Preserve the existing local database before moving it; do not delete it
 automatically. Remove `dipy_ai.db` from Git tracking.
 
-### `api/models.py`: database records
+### `api/infrastructure/models.py`: database records
 
 Contains `Role`, `Conversation`, and `Message`. Separate packages for individual
 classes are unnecessary. Use SQLAlchemy's `Mapped` / `mapped_column` style
@@ -109,7 +116,7 @@ consistently.
 - System instructions and intermediate tool results are not user conversation
   messages and are not stored in this table.
 
-### `api/conversations.py`: HTTP contract
+### `api/routers/conversations.py`: HTTP contract
 
 Place these Pydantic schemas at the beginning of the file:
 
@@ -126,7 +133,7 @@ Routes below the schemas are thin handlers: receive input and dependencies, call
 the service, and return its result. Translate service exceptions into HTTP errors
 here. Handlers do not call the agent or issue SQLAlchemy queries directly.
 
-### `api/chat_service.py`: conversation operations
+### `api/services/chat_service.py`: conversation operations
 
 Use one concrete `ChatService`. It can receive a session factory or use sessions
 passed by routes, but choose one approach rather than supporting both. For this
@@ -255,11 +262,11 @@ processes before enabling multiple workers; SQLite alone does not protect the
 
 ## Migration from the current branch
 
-1. Merge `api/db/base.py` and `api/db/core.py` into `database.py`.
-2. Merge `api/model/*` and `api/enum/role.py` into `models.py`.
+1. Merge `api/db/base.py` and `api/db/core.py` into `infrastructure/database.py`.
+2. Merge `api/model/*` and `api/enum/role.py` into `infrastructure/models.py`.
 3. Move schemas from `api/schemas/conversation.py` and routes from
-   `api/router/conversations.py` into `conversations.py`.
-4. Move `/invoke` from `app.py` into the router and its workflow into `ChatService`.
+   `api/router/conversations.py` into `routers/conversations.py`.
+4. Move `/invoke` from `app.py` into the router and its workflow into `services/chat_service.py`.
 5. Make agent state local to each invocation and adapt the CLI.
 6. Initialize resources through `lifespan` and update imports.
 7. Remove unnecessary empty packages and stop tracking the working database,
@@ -287,3 +294,35 @@ processes before enabling multiple workers; SQLite alone does not protect the
 Use temporary SQLite databases and a fake agent for the main checks. Real paid
 LLM calls are unnecessary to verify persistence, isolation, and errors. Separately
 verify message assembly inside the agent using a fake model client.
+
+## Implementation and verification notes
+
+Conversation locks are shared by request-scoped services within one process.
+Run the backend with one worker; multiple workers require coordination across
+processes before they can safely continue the same conversation concurrently.
+
+New timestamps are stored and returned in UTC. Legacy SQLite timestamps have no
+recorded timezone and are interpreted as UTC for compatibility; their original
+local timezone cannot be recovered automatically. If old dates matter, migrate
+them explicitly using the timezone of the server that originally wrote them.
+
+Tool selection returns both the bundle and a standalone search query resolved
+from conversation history, within the same model call.
+
+Run the regression checks without external LLM calls:
+
+```bash
+uv run python -m unittest discover -s tests -v
+```
+
+### Router and service organization
+
+`routers/simulation.py` owns simulation request schemas, HTTP dependencies, and
+HTTP error mapping. It obtains the simulation service from `app.state` and does
+not create a simulator. `services/nist_ams_mode_service.py` retains the existing
+simulation behavior. The console entry point imports that service from its new
+location.
+
+`app.py` initializes the simulator, tools, and agent in `lifespan`, publishes them
+through `app.state`, includes both routers, and closes resources at shutdown.
+The public endpoint paths remain unchanged.

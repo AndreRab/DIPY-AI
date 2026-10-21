@@ -1,6 +1,7 @@
 from dipy_ai.agent import WorkflowAgent, UserMessage
+from dipy_ai.agent.base_agent import ChatMessage
 from dipy_ai.simulation import NIST_AMS_100_69_CorruptModeSimulator, SimulationRunner
-from dipy_ai.api.nist_ams_mode_service import NIST_AMS_SumulationService
+from dipy_ai.api.services.nist_ams_mode_service import NIST_AMS_SumulationService
 from dipy_ai.tools import generate_tool_bundles
 from dipy_ai.config import (
     API_KEY, 
@@ -48,6 +49,8 @@ agent = WorkflowAgent(
 )
 
 
+history: list[ChatMessage] = []
+
 try:
     service.start(CORRUPTION_MODE)
     while True:
@@ -55,7 +58,11 @@ try:
         if user_input.message.lower() in ["exit", "quit"]:
             print("Exiting the chat. Goodbye!")
             break
-        response = agent.handle_message(user_input)
+        response = agent.handle_message(user_input, history)
+        history.extend([
+            {"role": "user", "content": user_input.message},
+            {"role": "assistant", "content": response},
+        ])
         print(f"{agent}: {response}")
 finally:
     service.close()

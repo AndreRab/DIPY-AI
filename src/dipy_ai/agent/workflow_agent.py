@@ -1,4 +1,4 @@
-from dipy_ai.agent.base_agent import BaseAgent, UserMessage
+from dipy_ai.agent.base_agent import BaseAgent, ChatMessage, UserMessage
 from dipy_ai.tools import ToolBundleEnum, ToolBundle, build_tool_selection_schema
 from langgraph.graph import StateGraph, START, END
 from concurrent.futures import ThreadPoolExecutor
@@ -20,6 +20,7 @@ def _json_default(value: Any) -> Any:
 
 class WorkflowState(TypedDict):
     history: list[dict[str, str]]
+    tool_query: str
     active_tool_bundle: ToolBundleEnum | None
     tool_bundle_results: dict[str, Any] | None
     model_response: str
@@ -48,14 +49,6 @@ class WorkflowAgent(BaseAgent):
         self._model_name = model_name
         
         self._graph = self._build_graph()
-        self._current_state: WorkflowState = {
-            "history": [
-                {"role": "system", "content": self._system_prompt_final_answer},
-            ],
-            "active_tool_bundle": None,
-            "tool_bundle_results": {},
-            "model_response": ""
-        }
         
     def _build_graph(self):
         graph = StateGraph(WorkflowState)
@@ -85,27 +78,30 @@ class WorkflowAgent(BaseAgent):
             tool_bundles=bundle_descriptions
         )
 
-        last_message = state["history"][-1]["content"]
-
         response = self._client.chat.completions.create(
             model=self._model_name,
             messages=[
                 {
                     "role": "system",
-                    "content": system_prompt,
+                    "content": system_prompt + (
+                        "\nAlso return query: a standalone search question for tools. "
+                        "Resolve references in the latest question using conversation history. "
+                        "Preserve the user intent and language; do not invent facts."
+                    ),
                 },
-                {
-                    "role": "user",
-                    "content": last_message,
-                },
+                *(dict(message) for message in state["history"] if message["role"] != "system"),
             ],
             response_format=build_tool_selection_schema(
-                allowed_values
+                allowed_values, include_query=True
             ),
         )
 
         content = response.choices[0].message.content
-        selected_value = json.loads(content)["bundle"]
+        selection = json.loads(content)
+        selected_value = selection["bundle"]
+        query = selection["query"].strip()
+        if not query:
+            raise ValueError("Tool query must not be empty")
 
         selected_bundle = next(
             bundle
@@ -115,20 +111,14 @@ class WorkflowAgent(BaseAgent):
         if self._logger is not None:
             self._logger.info("Selected tool bundle: %s", selected_bundle.value)
 
-        return {"active_tool_bundle": selected_bundle}
-
-    def _last_user_message(self, state: WorkflowState) -> str:
-        for message in reversed(state["history"]):
-            if message.get("role") == "user":
-                return message.get("content", "")
-        return ""
+        return {"active_tool_bundle": selected_bundle, "tool_query": query}
 
     def _execute_tool_bundle(self, state: WorkflowState) -> dict:
         selected_bundle = state["active_tool_bundle"]
         if selected_bundle is None:
             return {"tool_bundle_results": None}
         bundle = self._tool_bundles.get(selected_bundle)
-        query = self._last_user_message(state)
+        query = state["tool_query"]
         if self._logger is not None:
             self._logger.info(
                 "Executing tool bundle %s with tools: %s",
@@ -178,12 +168,21 @@ class WorkflowAgent(BaseAgent):
             "model_response": response.choices[0].message.content
         }
 
-    def handle_message(self, message: UserMessage) -> str:
+    def handle_message(self, message: UserMessage, history: list[ChatMessage]) -> str:
         if self._logger is not None:
             self._logger.info("Handling user message")
-        self._current_state["history"].append({"role": "user", "content": message.message})
-        self._current_state = self._graph.invoke(self._current_state)
-        self._current_state["history"].append({"role": "assistant", "content": self._current_state["model_response"]})
+        state: WorkflowState = {
+            "history": [
+                {"role": "system", "content": self._system_prompt_final_answer},
+                *(dict(item) for item in history),
+                {"role": "user", "content": message.message},
+            ],
+            "tool_query": "",
+            "active_tool_bundle": None,
+            "tool_bundle_results": None,
+            "model_response": "",
+        }
+        result = self._graph.invoke(state)
         if self._logger is not None:
             self._logger.info("Workflow response generated")
-        return self._current_state["model_response"]
+        return result["model_response"]
