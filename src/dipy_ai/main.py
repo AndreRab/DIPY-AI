@@ -1,7 +1,7 @@
 from dipy_ai.agent import WorkflowAgent, UserMessage
 from dipy_ai.agent.base_agent import ChatMessage
 from dipy_ai.simulation import NIST_AMS_100_69_CorruptModeSimulator, SimulationRunner
-from dipy_ai.api.nist_ams_mode_service import NIST_AMS_SumulationService
+from dipy_ai.api.services.nist_ams_mode_service import NIST_AMS_SumulationService
 from dipy_ai.tools import generate_tool_bundles
 from dipy_ai.config import (
     API_KEY, 

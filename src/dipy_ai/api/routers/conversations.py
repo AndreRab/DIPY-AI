@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, PositiveInt, StringConstraints
 from sqlalchemy.orm import Session
 
-from dipy_ai.api.database import get_db
-from dipy_ai.api.chat_service import ChatService, ConversationNotFound, GenerationFailed, GenerationTimeout
-from dipy_ai.api.enum.role import Role
+from dipy_ai.api.infrastructure.database import get_db
+from dipy_ai.api.services.chat_service import ChatService, ConversationBusy, ConversationNotFound, GenerationFailed, GenerationTimeout
+from dipy_ai.api.infrastructure.models import Role
 
 router = APIRouter(
     tags=["conversation"],
@@ -57,6 +57,8 @@ def get_messages(conversation_id : PositiveInt, chat_service : ChatService = Dep
 def invoke(request : InvokeRequest, chat_service : ChatService = Depends(get_chat_service)):
     try:
         return chat_service.invoke(request.prompt, request.conversation_id)
+    except ConversationBusy as exc:
+        raise HTTPException(status_code=409, detail="Conversation is busy") from exc
     except ConversationNotFound as exc:
         raise HTTPException(status_code=404, detail="Conversation not found") from exc
     except GenerationTimeout as exc:

@@ -1,12 +1,14 @@
 
-from datetime import datetime
+from datetime import UTC, datetime
+from contextlib import contextmanager
+from threading import Lock
 from openai import APITimeoutError
 from sqlalchemy.orm import Session
 
 from dipy_ai.agent.workflow_agent import WorkflowAgent
 from dipy_ai.agent.base_agent import UserMessage
-from dipy_ai.api.enum.role import Role
-from dipy_ai.api.models import Conversation, Message
+from dipy_ai.api.infrastructure.models import Role
+from dipy_ai.api.infrastructure.models import Conversation, Message
 
 class ConversationNotFound(Exception):
     pass
@@ -18,6 +20,31 @@ class GenerationFailed(Exception):
 
 class GenerationTimeout(GenerationFailed):
     pass
+
+class ConversationBusy(Exception):
+    pass
+
+
+# Shared across request-scoped services. Deployment must use one worker.
+_active_conversations: set[int] = set()
+_active_guard = Lock()
+
+
+@contextmanager
+def conversation_lock(conversation_id: int | None):
+    if conversation_id is None:
+        yield
+        return
+    with _active_guard:
+        if conversation_id in _active_conversations:
+            raise ConversationBusy()
+        _active_conversations.add(conversation_id)
+    try:
+        yield
+    finally:
+        with _active_guard:
+            _active_conversations.remove(conversation_id)
+
 
 class ChatService:
     def __init__(self, db : Session,agent : WorkflowAgent):
@@ -34,6 +61,10 @@ class ChatService:
         ).order_by(Message.id.asc()).all()
 
     def invoke(self, prompt : str, conversation_id : int | None = None):
+        with conversation_lock(conversation_id):
+            return self._invoke(prompt, conversation_id)
+
+    def _invoke(self, prompt: str, conversation_id: int | None):
         history = []
         if conversation_id is not None:
             history = [
@@ -54,7 +85,7 @@ class ChatService:
 
         try:
             if conversation_id is None:
-                conversation = Conversation(title=prompt[:20])
+                conversation = Conversation(title=prompt[:80])
                 self.db.add(conversation)
                 self.db.flush()
                 conversation_id = conversation.id
@@ -63,7 +94,7 @@ class ChatService:
                 if conversation is None:
                     raise ConversationNotFound()
 
-            conversation.updated_at = datetime.now()
+            conversation.updated_at = datetime.now(UTC)
             self.db.add_all([
                 Message(
                     content=prompt,

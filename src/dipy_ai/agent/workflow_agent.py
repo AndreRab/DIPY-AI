@@ -20,6 +20,7 @@ def _json_default(value: Any) -> Any:
 
 class WorkflowState(TypedDict):
     history: list[dict[str, str]]
+    tool_query: str
     active_tool_bundle: ToolBundleEnum | None
     tool_bundle_results: dict[str, Any] | None
     model_response: str
@@ -82,17 +83,25 @@ class WorkflowAgent(BaseAgent):
             messages=[
                 {
                     "role": "system",
-                    "content": system_prompt,
+                    "content": system_prompt + (
+                        "\nAlso return query: a standalone search question for tools. "
+                        "Resolve references in the latest question using conversation history. "
+                        "Preserve the user intent and language; do not invent facts."
+                    ),
                 },
                 *(dict(message) for message in state["history"] if message["role"] != "system"),
             ],
             response_format=build_tool_selection_schema(
-                allowed_values
+                allowed_values, include_query=True
             ),
         )
 
         content = response.choices[0].message.content
-        selected_value = json.loads(content)["bundle"]
+        selection = json.loads(content)
+        selected_value = selection["bundle"]
+        query = selection["query"].strip()
+        if not query:
+            raise ValueError("Tool query must not be empty")
 
         selected_bundle = next(
             bundle
@@ -102,20 +111,14 @@ class WorkflowAgent(BaseAgent):
         if self._logger is not None:
             self._logger.info("Selected tool bundle: %s", selected_bundle.value)
 
-        return {"active_tool_bundle": selected_bundle}
-
-    def _last_user_message(self, state: WorkflowState) -> str:
-        for message in reversed(state["history"]):
-            if message.get("role") == "user":
-                return message.get("content", "")
-        return ""
+        return {"active_tool_bundle": selected_bundle, "tool_query": query}
 
     def _execute_tool_bundle(self, state: WorkflowState) -> dict:
         selected_bundle = state["active_tool_bundle"]
         if selected_bundle is None:
             return {"tool_bundle_results": None}
         bundle = self._tool_bundles.get(selected_bundle)
-        query = self._last_user_message(state)
+        query = state["tool_query"]
         if self._logger is not None:
             self._logger.info(
                 "Executing tool bundle %s with tools: %s",
@@ -174,6 +177,7 @@ class WorkflowAgent(BaseAgent):
                 *(dict(item) for item in history),
                 {"role": "user", "content": message.message},
             ],
+            "tool_query": "",
             "active_tool_bundle": None,
             "tool_bundle_results": None,
             "model_response": "",

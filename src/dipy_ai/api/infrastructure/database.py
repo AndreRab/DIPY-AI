@@ -11,7 +11,7 @@ def get_db() -> Generator[Session, None, None]:
 class Base(DeclarativeBase):
     pass
 
-DATABASE_PATH = Path(__file__).resolve().parents[3] / "var" / "dipy_ai.db"
+DATABASE_PATH = Path(__file__).resolve().parents[4] / "var" / "dipy_ai.db"
 
 engine = create_engine(
     f"sqlite:///{DATABASE_PATH}",
@@ -21,7 +21,7 @@ engine = create_engine(
 
 
 def init_db():
-    from dipy_ai.api import models  # noqa: F401
+    from dipy_ai.api.infrastructure import models  # noqa: F401
 
     DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
     Base.metadata.create_all(engine)
