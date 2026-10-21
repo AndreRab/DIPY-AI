@@ -4,6 +4,12 @@ The frontend is a React and TypeScript application served by Vite. It sends
 prompts to the FastAPI backend at `${BACKEND_URL}/invoke`, using `BACKEND_URL`
 from the repository root `.env` file.
 
+The collapsible History panel lists saved conversations from `GET /conversations`.
+Selecting one loads `GET /conversations/{id}/messages`, and subsequent prompts
+include its `conversation_id` in `POST /invoke`. Use New chat to start a separate
+conversation; it appears in history after the first successful response. On small
+screens, history starts collapsed and opens above the messages.
+
 ## Requirements
 
 - Node.js and npm

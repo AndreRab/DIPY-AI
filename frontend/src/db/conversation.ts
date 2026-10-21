@@ -1,8 +1,5 @@
 import ky from 'ky';
-
-
-export const backendUrl = (import.meta.env.VITE_BACKEND_URL || import.meta.env.BACKEND_URL || 'http://localhost:8000').replace(/\/+$/, '');
-
+import { backendUrl } from '@/agent/agent';
 
 export interface Conversation {
     id: number;
@@ -11,12 +8,17 @@ export interface Conversation {
     updated_at: string;
 }
 
-export async function getConversations(): Promise<Conversation[]> {
-    const response = await ky.get<Conversation[]>(`${backendUrl}/conversations`);
+export interface ConversationMessage {
+    role: 'user' | 'assistant';
+    content: string;
+}
+
+export async function getConversations(signal?: AbortSignal): Promise<Conversation[]> {
+    const response = await ky.get<Conversation[]>(`${backendUrl}/conversations`, { signal });
     return await response.json();
 }
 
-export async function getMessages(conversationId : number) {
-    const response = await ky.get(`${backendUrl}/conversations/${conversationId}/messages`);
+export async function getMessages(conversationId: number, signal?: AbortSignal): Promise<ConversationMessage[]> {
+    const response = await ky.get<ConversationMessage[]>(`${backendUrl}/conversations/${conversationId}/messages`, { signal });
     return await response.json();
 }
