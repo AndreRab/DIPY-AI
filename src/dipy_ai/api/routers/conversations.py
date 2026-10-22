@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, PositiveInt, StringConstraints
 from sqlalchemy.orm import Session
 
@@ -52,6 +52,17 @@ def get_messages(conversation_id : PositiveInt, chat_service : ChatService = Dep
         return chat_service.get_messages(conversation_id)
     except ConversationNotFound as exc:
         raise HTTPException(status_code=404, detail="Conversation not found") from exc
+
+@router.delete("/conversations/{conversation_id}", status_code=204)
+def delete_conversation(conversation_id: PositiveInt, chat_service: ChatService = Depends(get_chat_service)):
+    try:
+        chat_service.delete_conversation(conversation_id)
+    except ConversationNotFound as exc:
+        raise HTTPException(status_code=404, detail="Conversation not found") from exc
+    except ConversationBusy as exc:
+        raise HTTPException(status_code=409, detail="Conversation is busy") from exc
+    return Response(status_code=204)
+
 
 @router.post("/invoke", response_model=InvokeResponse)
 def invoke(request : InvokeRequest, chat_service : ChatService = Depends(get_chat_service)):

@@ -64,6 +64,19 @@ class ChatService:
         with conversation_lock(conversation_id):
             return self._invoke(prompt, conversation_id)
 
+    def delete_conversation(self, conversation_id: int):
+        with conversation_lock(conversation_id):
+            try:
+                conversation = self.db.get(Conversation, conversation_id)
+                if conversation is None:
+                    raise ConversationNotFound()
+                self.db.query(Message).filter(Message.conversation_id == conversation_id).delete()
+                self.db.delete(conversation)
+                self.db.commit()
+            except Exception:
+                self.db.rollback()
+                raise
+
     def _invoke(self, prompt: str, conversation_id: int | None):
         history = []
         if conversation_id is not None:

@@ -22,3 +22,7 @@ export async function getMessages(conversationId: number, signal?: AbortSignal):
     const response = await ky.get<ConversationMessage[]>(`${backendUrl}/conversations/${conversationId}/messages`, { signal });
     return await response.json();
 }
+
+export async function deleteConversation(conversationId: number): Promise<void> {
+    await ky.delete(`${backendUrl}/conversations/${conversationId}`, { retry: 0 });
+}

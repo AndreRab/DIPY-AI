@@ -109,7 +109,7 @@ export const ChatComponent = ({ showSimulation, onToggleSimulation }: ChatCompon
                 </CardHeader>
 
                 <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-                    {showHistory && <ConversationHistory activeConversationId={activeConversationId} disabled={mutation.isPending} onSelect={selectConversation} />}
+                    {showHistory && <ConversationHistory activeConversationId={activeConversationId} disabled={mutation.isPending} onSelect={selectConversation} onDelete={id => { if (id === activeConversationId) selectConversation(null) }} />}
                     <div className="flex min-h-0 min-w-0 flex-1 flex-col">
                         <CardContent aria-busy={isLoadingMessages || mutation.isPending} className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain py-4">
                             {isLoadingMessages ? (
