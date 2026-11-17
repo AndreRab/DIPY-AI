@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1240" viewBox="0 0 1600 1240" role="img" aria-labelledby="title desc"><title id="title">DIPy-AI modular architecture</title><desc id="desc">Three conceptual layers, with a detailed implemented L3 workflow. L2 outputs are exposed through tools. A fixed ToolBundle is selected, tools execute in parallel, and evidence is synthesized for human review. Alternative routers and local deployment are extension options.</desc><defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#68798e"/></marker></defs><style>text{font-family:Arial,Helvetica,sans-serif;fill:#172b43}.title{font-size:36px;font-weight:700}.head{font-size:23px;font-weight:700}.body{font-size:19px}.small{font-size:17px;fill:#52667e}.tag{font-size:16px;font-weight:700;letter-spacing:1.6px;fill:#43658a}.edge{fill:none;stroke:#68798e;stroke-width:2.5;marker-end:url(#arrow)}</style><rect width="1600" height="1240" rx="24" fill="#f6f8fc"/>
+<text x="60" y="66" class="title">DIPy-AI</text>
+<text x="60" y="102" class="body">Modular sensor intelligence · bounded orchestration · operator support</text>
+<text x="60" y="151" class="tag">THREE-LAYER ARCHITECTURE</text>
+<rect x="60" y="175" width="470" height="158" rx="16" fill="#edf4ff" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="82" y="205" class="tag">L1 · DATA</text>
+<text x="82" y="242" class="head">Sensor-specific processing</text>
+<text x="82" y="278" class="body">Validation · preprocessing</text>
+<text x="82" y="308" class="small">Adapters &amp; data packaging</text>
+<rect x="565" y="175" width="470" height="158" rx="16" fill="#eaf6f2" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="587" y="205" class="tag">L2 · INFORMATION</text>
+<text x="587" y="242" class="head">Replaceable analytics</text>
+<text x="587" y="278" class="body">Features · events · predictions</text>
+<text x="587" y="308" class="small">ML classifiers / anomaly detectors</text>
+<rect x="1070" y="175" width="470" height="158" rx="16" fill="#f0edfa" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="1092" y="205" class="tag">L3 · KNOWLEDGE</text>
+<text x="1092" y="242" class="head">Contextual interpretation</text>
+<text x="1092" y="278" class="body">Task routing · evidence assembly</text>
+<text x="1092" y="308" class="small">Explanation &amp; guidance</text>
+<path d="M530 254 H562" class="edge"/>
+<path d="M1035 254 H1067" class="edge"/>
+<text x="60" y="366" class="small">Layer responsibilities shown above; prototype coverage is narrower than the complete architecture.</text>
+<rect x="60" y="401" width="1480" height="667" rx="16" fill="#ffffff" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="86" y="438" class="tag">INSIDE L3</text>
+<text x="86" y="472" class="head">A fixed workflow for every operator request</text>
+<rect x="86" y="505" width="255" height="120" rx="16" fill="#f6f8fc" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="108" y="540" class="head">Operator request</text>
+<text x="108" y="572" class="body">Question + conversation</text>
+<text x="108" y="601" class="small">context</text>
+<rect x="391" y="505" width="300" height="120" rx="16" fill="#edf4ff" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="413" y="540" class="head">1  Select ToolBundle</text>
+<text x="413" y="572" class="body">Current: LLM + schema</text>
+<text x="413" y="601" class="small">Bundle ID + standalone query</text>
+<rect x="741" y="505" width="334" height="120" rx="16" fill="#f6f8fc" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="763" y="540" class="head">ToolBundle registry</text>
+<text x="763" y="572" class="body">Task → predefined tool set</text>
+<text x="763" y="601" class="small">6 registered task categories</text>
+<rect x="1125" y="505" width="389" height="120" rx="16" fill="#f6f8fc" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="1147" y="540" class="head">Replaceable router</text>
+<text x="1147" y="572" class="body">Rules · classifier · Jev-style</text>
+<text x="1147" y="601" class="small">Decision models: extension option</text>
+<path d="M341 565 H388" class="edge"/>
+<path d="M691 565 H738" class="edge"/>
+<path d="M1320 505 V490 H541 V505" fill="none" stroke="#8595aa" stroke-width="2" stroke-dasharray="6 5"/>
+<rect x="86" y="667" width="989" height="181" rx="16" fill="#eaf6f2" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="108" y="701" class="head">2  Execute selected tools in parallel</text>
+<rect x="108" y="721" width="303" height="102" rx="16" fill="#ffffff" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="124" y="758" class="body">Process evidence</text>
+<text x="124" y="792" class="small">State · history</text>
+<rect x="425" y="721" width="303" height="102" rx="16" fill="#ffffff" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="441" y="758" class="body">L2 analytical outputs</text>
+<text x="441" y="792" class="small">Anomalies · model outputs</text>
+<rect x="742" y="721" width="303" height="102" rx="16" fill="#ffffff" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="758" y="758" class="body">Domain knowledge</text>
+<text x="758" y="792" class="small">RAG · machine context</text>
+<path d="M908 625 V648 H580 V664" class="edge"/>
+<rect x="1125" y="667" width="389" height="181" rx="16" fill="#ffffff" stroke="#a8b8c9" stroke-width="1.5" stroke-dasharray="7 5"/>
+<text x="1147" y="703" class="head">L2 → tool → bundle</text>
+<text x="1147" y="739" class="body">Expose an L2 component or</text>
+<text x="1147" y="768" class="body">its computed outputs via a tool.</text>
+<text x="1147" y="806" class="small">Reuse it in the tasks that need it.</text>
+<rect x="86" y="890" width="300" height="130" rx="16" fill="#f6f8fc" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="108" y="929" class="head">Structured evidence</text>
+<text x="108" y="962" class="body">Tool results as JSON</text>
+<text x="108" y="993" class="small">Values · units · evaluation status</text>
+<rect x="436" y="890" width="350" height="130" rx="16" fill="#f0edfa" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="458" y="929" class="head">3  Synthesize answer</text>
+<text x="458" y="962" class="body">LLM interprets supplied evidence</text>
+<text x="458" y="993" class="small">No further tool selection</text>
+<rect x="836" y="890" width="239" height="130" rx="16" fill="#f6f8fc" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="858" y="929" class="head">Operator review</text>
+<text x="858" y="962" class="body">Explanation &amp; guidance</text>
+<text x="858" y="993" class="small">Human decision</text>
+<path d="M236 848 V887" class="edge"/>
+<path d="M386 956 H433" class="edge"/>
+<path d="M786 956 H833" class="edge"/>
+<text x="1125" y="925" class="tag">NO AGENT LOOP</text>
+<text x="1125" y="960" class="body">One selection → one tool stage</text>
+<text x="1125" y="990" class="body">→ one synthesis stage</text>
+<text x="1125" y="1024" class="small">Fixed execution after bundle selection</text>
+<rect x="60" y="1100" width="1480" height="96" rx="16" fill="#eaf0f8" stroke="#d7e1ed" stroke-width="1.5"/>
+<text x="84" y="1134" class="tag">DEPLOYMENT &amp; REPLACEMENT</text>
+<text x="84" y="1167" class="body">Current: remote gpt-oss-20b + embeddings · Local generation and embeddings can replace external services.</text>
+</svg>

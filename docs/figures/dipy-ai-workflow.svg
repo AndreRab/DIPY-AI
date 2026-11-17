@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1560" height="540" viewBox="0 0 1560 540" role="img" aria-labelledby="title desc">
+<title id="title">DIPy-AI workflow</title><desc id="desc">A user query is routed to a predefined ToolBundle. Its tools run in parallel, their outputs form an evidence package, and a final answer is synthesized.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10Z" fill="#718198"/></marker></defs>
+<style>text{font-family:Arial,Helvetica,sans-serif;fill:#23344b;text-anchor:middle;font-size:24px}.sub{font-size:19px;fill:#5b6c82}.label{font-size:17px;fill:#5b6c82;letter-spacing:1px}.node{stroke:#ccd8e6;stroke-width:1.5}.edge{fill:none;stroke:#718198;stroke-width:2;marker-end:url(#arrow)}.branch{fill:none;stroke:#718198;stroke-width:2}</style>
+<rect width="1560" height="540" rx="22" fill="#ffffff"/>
+<text x="780" y="65" style="font-size:30px;font-weight:700">From question to evidence-based answer</text>
+<rect class="node" x="40" y="220" width="225" height="110" rx="15" fill="#f3f6fb"/>
+<text x="152" y="282">User query</text>
+<path class="edge" d="M265 275 H320"/>
+<rect class="node" x="325" y="220" width="265" height="110" rx="15" fill="#edf3fe"/>
+<text x="457" y="263">Select ToolBundle</text><text class="sub" x="457" y="299">Predefined set of tools</text>
+<path class="branch" d="M590 275 H625 M625 165 V385"/>
+<path class="edge" d="M625 165 H670"/><path class="edge" d="M625 275 H670"/><path class="edge" d="M625 385 H670"/>
+<text class="label" x="780" y="111">PARALLEL EXECUTION</text>
+<rect class="node" x="675" y="130" width="210" height="70" rx="12" fill="#eaf6f1"/><text x="780" y="174">Tool 1</text>
+<rect class="node" x="675" y="240" width="210" height="70" rx="12" fill="#eaf6f1"/><text x="780" y="284">Tool 2</text>
+<rect class="node" x="675" y="350" width="210" height="70" rx="12" fill="#eaf6f1"/><text x="780" y="394">Tool n</text>
+<path class="branch" d="M885 165 H935 V385 H885 M885 275 H935"/>
+<path class="edge" d="M935 275 H980"/>
+<rect class="node" x="985" y="220" width="225" height="110" rx="15" fill="#f3f6fb"/>
+<text x="1097" y="263">Evidence package</text><text class="sub" x="1097" y="299">Collected tool results</text>
+<path class="edge" d="M1210 275 H1265"/>
+<rect class="node" x="1270" y="220" width="250" height="110" rx="15" fill="#f1edfa"/>
+<text x="1395" y="263">Answer synthesis</text><text class="sub" x="1395" y="299">Response to the user</text>
+<text class="sub" x="780" y="490">Bounded workflow · No iterative agent loop</text>
+</svg>

@@ -1,0 +1,257 @@
+\FloatBarrier
+\section{Results}
+\label{sec:results}
+
+This section presents a qualitative examination of the LPBF demonstrator under baseline replay and three synthetic perturbation scenarios. The evaluated configuration used gpt-oss-20b through Groq for request routing and answer synthesis. Responses were examined for numerical consistency, agreement with analytical tool outputs, acknowledgement of insufficient evidence, and justification of operator recommendations. The observations describe the recorded examples; they do not establish statistical reliability or physical fault-diagnosis accuracy.
+
+Each scenario began with the same state-reporting question, identified as B01, R01, Z01, or P01:
+\begin{quote}
+\small What is the current process state? Report commanded and measured X position, Y position, laser power, and scan speed, including units and anomaly evaluation status.
+\end{quote}
+Three additional questions examined scenario-specific behaviour. Question identifiers connect the prompts, application captures, and assessments below. Table~\ref{tab:results-configuration} records the numerical configuration used to interpret these examples.
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.16}
+\begin{tabularx}{\linewidth}{@{}p{0.29\linewidth}X@{}}
+\toprule
+\textbf{Configuration item} & \textbf{Value or interpretation} \\
+\midrule
+Position tolerances & Absolute commanded-minus-measured deviation greater than 0.25\,mm for either X or Y. \\
+Laser-power tolerance & Absolute commanded-minus-measured deviation greater than 10\,W. Equality with a threshold is not an exceedance. \\
+Scan-speed evaluation & No threshold configured; the analytical status is \texttt{not\_evaluated}. \\
+Coupled reduction & Measured power multiplied by 0.5; T100 length and width by 0.75; T80, T100, and T120 areas by 0.5625. \\
+Zero-power scenario & Available measured power and the five exposed melt-pool features set to zero; missing values preserved. \\
+Position perturbation & Offsets of +0.5\,mm on both measured axes, applied together with probability 0.25 per replay step; seed 42. \\
+Recent history & Up to ten recent states supplied to the history tool. \\
+\bottomrule
+\end{tabularx}
+\caption{Configuration associated with the recorded examples. Perturbations are synthetic test transformations, not calibrated physical models.}
+\label{tab:results-configuration}
+\end{table}
+
+\subsection{Baseline Replay}
+\label{sec:results-baseline}
+
+The baseline scenario used the original measurements without additional perturbations. The follow-up questions were:
+\begin{description}
+\item[B02.] \textit{What are the signed command-minus-measurement differences and configured absolute thresholds for those signals? Explain which deviations exceed their thresholds.}
+\item[B03.] \textit{Which signals have been evaluated, and which cannot be classified with the available data and thresholds? Can the current scan speed be described as normal?}
+\item[B04.] \textit{What should the operator check next before changing any process settings? Base your guidance on the available evidence and state whether any intervention is justified.}
+\end{description}
+
+In B01, the system correctly reported the available measurements and evaluation statuses (Figure~\ref{fig:results-baseline}). The measured laser power was 95.478\,W against a command of 100\,W, with the deviation remaining below the configured 10\,W threshold. The reported X and Y deviations were also within their configured tolerances.
+
+B02 correctly presented the signed differences for the state associated with that response. In B03, the model explicitly acknowledged that scan speed could not be classified as normal or anomalous because no threshold had been configured. This preserved the distinction between a signal evaluated as normal and one that had not been evaluated.
+
+B04 proposed checking scan-speed acceptance criteria before changing process settings. However, it introduced example tolerances of $\pm5\%$ and $\pm10\%$ without identifying their supporting source. The response also suggested that exceeding a subsequently configured threshold would justify a process adjustment, although threshold exceedance alone would not establish the appropriate intervention. Table~\ref{tab:results-baseline} summarises the observations.
+
+\begin{figure}[htbp]
+\centering
+% Original capture: 2442 x 1312 pixels, 144 dpi. Crop affects layout only.
+\includegraphics[width=0.88\linewidth,trim=270bp 281bp 448.5bp 170bp,clip]{results-figures/B01.png}
+\caption{Baseline response to B01, showing reported measurements and evaluation statuses. The application screenshot is cropped for legibility; the model's wording is preserved.}
+\label{fig:results-baseline}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\linewidth}{@{}p{0.12\linewidth}X@{}}
+\toprule
+\textbf{Question} & \textbf{Observed outcome} \\
+\midrule
+B01 & Correct reporting of measurements, units, and evaluation statuses. \\
+B02 & Correct signed differences and threshold comparisons for the associated state. \\
+B03 & Correct acknowledgement of insufficient criteria for evaluating scan speed. \\
+B04 & Relevant verification steps, with unsupported tolerance examples and an overextended intervention criterion. \\
+\bottomrule
+\end{tabularx}
+\caption{Qualitative assessment of the recorded baseline responses.}
+\label{tab:results-baseline}
+\end{table}
+\FloatBarrier
+
+\subsection{Laser-Power and Melt-Pool Reduction}
+\label{sec:results-reduction}
+
+This scenario reduced measured laser power and selected melt-pool features using the predefined transformations in Table~\ref{tab:results-configuration}. The follow-up questions were:
+\begin{description}
+\item[R02.] \textit{Report the current T100 melt-pool length and width and the T80, T100, and T120 areas, with units. Is there enough comparison evidence to conclude that the melt pool has become smaller? Explain what the available measurements establish.}
+\item[R03.] \textit{What could explain the current laser-power discrepancy, and how might it relate to the melt-pool observations? Separate measured evidence, explanations supported by the available documentation, and unconfirmed hypotheses.}
+\item[R04.] \textit{What should the operator check next before changing any process settings? Base your guidance on the available evidence and state what remains uncertain.}
+\end{description}
+
+R01 correctly reported a measured laser power of 47.739\,W against a 100\,W command and identified the deviation as anomalous (Figure~\ref{fig:results-reduction}). For the corresponding source row, the baseline measurement was 95.478\,W, confirming consistency with the injected reduction.
+
+R02 correctly reported the current melt-pool measurements but made errors when comparing them with recent history. It described the current T100 area of 0.005400\,mm$^2$ and T120 area of 0.004896\,mm$^2$ as historical minima. The corresponding ten-state history window contained lower values of 0.005220\,mm$^2$ and 0.004716\,mm$^2$, respectively. The explanation therefore overstated the evidence for a reduction across these features.
+
+In R03, the response separated observations, documentation-supported explanations, and hypotheses through explicit headings. Nevertheless, the categorisation was not consistently justified. Nominal machine parameters and monitoring metadata were used to support possible optical losses and calibration problems without establishing those mechanisms. The response also described scan speed as anomalous despite the absence of a configured threshold. Its reported power difference had the opposite sign to the analytical tool's commanded-minus-measured convention.
+
+R04 proposed further checks and acknowledged uncertainty about the exact cause. However, it repeated the unsupported scan-speed classification and several assumptions from the preceding explanation. Table~\ref{tab:results-reduction} distinguishes measurement reporting from these interpretation errors.
+
+\begin{figure}[htbp]
+\centering
+% Original capture: 2438 x 1330 pixels, 144 dpi.
+\includegraphics[width=\linewidth,trim=275bp 265bp 304bp 170bp,clip]{results-figures/R01.png}
+\caption{Response to R01 under coupled power and melt-pool reduction. The reduced measured power is classified as anomalous, while scan speed remains unevaluated. Original application screenshot, cropped for legibility.}
+\label{fig:results-reduction}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\linewidth}{@{}p{0.12\linewidth}X@{}}
+\toprule
+\textbf{Question} & \textbf{Observed outcome} \\
+\midrule
+R01 & Correct reporting of reduced power and its anomaly status. \\
+R02 & Correct current measurements, with errors in identifying historical minima. \\
+R03 & Structured explanation containing unsupported attribution, inconsistent status interpretation, and a signed-difference error. \\
+R04 & Proposed diagnostic checks, but propagated earlier interpretation errors. \\
+\bottomrule
+\end{tabularx}
+\caption{Qualitative assessment of the recorded reduction-scenario responses.}
+\label{tab:results-reduction}
+\end{table}
+\FloatBarrier
+
+\subsection{Zero Laser-Power Reading}
+\label{sec:results-zero}
+
+The zero-power scenario set the available measured laser-power and selected melt-pool values to zero. The follow-up questions were:
+\begin{description}
+\item[Z02.] \textit{What do the current laser-power and melt-pool measurements show? Report the available values with units and distinguish missing measurements from zero values.}
+\item[Z03.] \textit{Does the zero laser-power reading prove a hardware failure or a defective part? Explain possible causes and what additional evidence would be needed to distinguish them.}
+\item[Z04.] \textit{What should the operator check next before changing any process settings? Base your guidance on the available evidence and state what remains uncertain.}
+\end{description}
+
+Z01 correctly reported 0\,W measured power against a 100\,W command and classified the power deviation as anomalous (Figure~\ref{fig:results-zero}). X and Y remained within their configured tolerances, while scan speed was reported as unevaluated. Reproduction of the corresponding replay state confirmed the reported measurements.
+
+Z02 correctly distinguished zero measurements from missing data. It reported the exposed melt-pool features as present and equal to zero. A presentation error occurred in the units column, where the T100 feature identifier was combined with the length unit.
+
+Z03 presented hardware, command-path, and measurement-related explanations and identified additional evidence that could help distinguish them. However, some subsequent diagnostic statements were too categorical. In particular, a recorded 100\,W controller command was treated as evidence that the laser was probably operating and that the sensor was incorrect. The command alone did not support that conclusion.
+
+Z04 proposed checking controller status, measurement integrity, and other diagnostic information. The response also conflated optical-power measurement with electrical-current measurement and included claims about part quality that were not established by the supplied evidence. These limitations qualify the apparent usefulness of the diagnostic checklist (Table~\ref{tab:results-zero}).
+
+\begin{figure}[htbp]
+\centering
+% Original capture: 2460 x 1328 pixels, 144 dpi.
+\includegraphics[width=\linewidth,trim=207.5bp 374.5bp 445bp 114bp,clip]{results-figures/Z01.png}
+\caption{Response to Z01 showing zero measured laser power against a nonzero command. Positional signals remain within tolerance and scan speed is not evaluated. Original application screenshot, cropped for legibility.}
+\label{fig:results-zero}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\linewidth}{@{}p{0.12\linewidth}X@{}}
+\toprule
+\textbf{Question} & \textbf{Observed outcome} \\
+\midrule
+Z01 & Correct zero-power reporting and evaluation statuses. \\
+Z02 & Correct distinction between zero and missing values, with a unit-label error. \\
+Z03 & Consideration of alternative causes, followed by overly certain diagnostic statements. \\
+Z04 & Relevant categories of checks, with technical imprecision and unsupported conclusions. \\
+\bottomrule
+\end{tabularx}
+\caption{Qualitative assessment of the recorded zero-power responses.}
+\label{tab:results-zero}
+\end{table}
+\FloatBarrier
+
+\subsection{Positional Perturbations}
+\label{sec:results-position}
+
+The evaluated positional configuration applied offsets of +0.5\,mm to measured X and Y on selected replay steps. The follow-up questions were:
+\begin{description}
+\item[P02.] \textit{Do the current X and Y deviations exceed the configured tolerances? Report the commanded and measured positions, signed command-minus-measurement differences, and absolute thresholds.}
+\item[P03.] \textit{Compare the recent commanded and measured X and Y positions. What positional variation is visible in the available history, and is there enough evidence to identify a persistent drift or a specific physical cause?}
+\item[P04.] \textit{What should the operator check next before changing any process settings? Base your guidance on the available evidence and state whether any intervention is justified.}
+\end{description}
+
+For replay step 21, examined in P01 and P02, the signed deviations were $-0.0245$\,mm in X and $+0.138$\,mm in Y. Both were below the configured absolute threshold of 0.25\,mm, and the system correctly reported that neither axis exceeded its tolerance (Figure~\ref{fig:results-position}). Earlier perturbations visible in the replay trajectory did not imply that the current sample was anomalous.
+
+P03 examined a later state, corresponding to replay step 42, with absolute deviations of 0.4955\,mm in X and 0.364\,mm in Y. Reproduction of that state confirmed that the anomaly tool classified both axes as anomalous. The generated explanation nevertheless stated that the Y deviation was below the threshold and associated it with an unevaluated status. Two earlier X-position differences were also calculated incorrectly. Table~\ref{tab:results-position-discrepancy} records the decisive threshold comparison.
+
+The response appropriately acknowledged insufficient evidence for a specific physical cause. However, describing the final deviation as temporary was premature because subsequent recovery had not been demonstrated.
+
+P04 correctly referred to both current position deviations as exceeding tolerance, but its guidance was internally inconsistent. It gave conflicting answers about whether intervention was justified, described scan speed as normal despite its unevaluated status, and recommended stopping the build and performing calibration without a validated machine-specific procedure. Table~\ref{tab:results-position} summarises the recorded responses.
+
+\begin{figure}[htbp]
+\centering
+% Original capture: 2436 x 1332 pixels, 144 dpi.
+\includegraphics[width=\linewidth,trim=242.5bp 68.5bp 223bp 437.5bp,clip]{results-figures/P02.png}
+\caption{Response to P02 for a below-threshold positional state. The reported absence of a current positional alarm is correct for this sample, even though the replay history contains injected perturbations. Original application screenshot, cropped for legibility.}
+\label{fig:results-position}
+\end{figure}
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\linewidth}{@{}p{0.10\linewidth}p{0.19\linewidth}p{0.19\linewidth}X@{}}
+\toprule
+\textbf{Axis} & \textbf{Absolute deviation (mm)} & \textbf{Threshold (mm)} & \textbf{Analytical result and generated interpretation in P03} \\
+\midrule
+X & 0.4955 & 0.25 & Tool: anomaly. Response recognises the large positional deviation. \\
+Y & 0.3640 & 0.25 & Tool: anomaly. Response incorrectly describes the deviation as below threshold and not evaluated. \\
+\bottomrule
+\end{tabularx}
+\caption{A verified discrepancy between analytical output and the generated historical explanation at replay step 42.}
+\label{tab:results-position-discrepancy}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\linewidth}{@{}p{0.12\linewidth}X@{}}
+\toprule
+\textbf{Question} & \textbf{Observed outcome} \\
+\midrule
+P01 & Correct reporting of the current measurements and statuses. \\
+P02 & Correct calculation and interpretation of below-threshold deviations. \\
+P03 & Errors in arithmetic and Y-threshold interpretation; appropriate uncertainty about the physical cause. \\
+P04 & Recognition of positional exceedances, accompanied by inconsistent and insufficiently supported recommendations. \\
+\bottomrule
+\end{tabularx}
+\caption{Qualitative assessment of the recorded positional-perturbation responses.}
+\label{tab:results-position}
+\end{table}
+\FloatBarrier
+
+\subsection{Summary of Findings and Limitations}
+\label{sec:results-summary}
+
+The recorded examples demonstrated successful reporting of current process measurements and, in several responses, correct preservation of the distinction between normal and unevaluated signals. More complex tasks exposed errors in historical aggregation, numerical comparison, interpretation of analytical statuses, and justification of recommendations (Table~\ref{tab:results-summary}).
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\linewidth}{@{}p{0.27\linewidth}X@{}}
+\toprule
+\textbf{Capability} & \textbf{Observation in the recorded examples} \\
+\midrule
+Current-state reporting & Correct values and evaluation statuses in the principal state-summary examples. \\
+Evaluation coverage & Several responses preserved \texttt{not\_evaluated}; longer explanations sometimes contradicted that status. \\
+Historical comparison & Errors in signed differences and identification of historical minima. \\
+Causal interpretation & Candidate mechanisms were sometimes presented with insufficient evidential support. \\
+Operator guidance & Diagnostic checks were proposed, but some recommendations were inconsistent or exceeded the available evidence. \\
+\bottomrule
+\end{tabularx}
+\caption{Summary of observed behaviour. The entries are qualitative findings, not estimated success rates.}
+\label{tab:results-summary}
+\end{table}
+
+Two failure mechanisms merit separate consideration. First, the history tool supplied measurement records without precomputed statistical summaries, leaving some arithmetic and aggregation to the language model. Second, the model occasionally contradicted evaluation statuses already supplied by the anomaly tool. Additional historical-analysis tools could address the former, while validation of generated statements against tool outputs could address the latter. These improvements remain to be evaluated.
+
+The available records also impose methodological limits. Some question sequences span different replay states and therefore cannot be treated as evaluations of one frozen evidence package. The examples do not establish repeatability or error rates, and screenshots alone do not verify routing decisions or retrieval provenance. The findings concern the combined workflow using the selected model and tools. Without model comparisons, the observed errors cannot be attributed specifically to model size. Component adaptability, fully local deployment, and alternative orchestration strategies require separate experiments.
+
+Despite the observed errors, the evaluated gpt-oss-20b workflow demonstrated potential for presenting process measurements, highlighting deviations, and suggesting initial diagnostic checks for operator review. Tasks involving numerical aggregation and comparison across multiple observations appeared more error-prone, suggesting that additional deterministic analytical tools could improve consistency. The compact model may therefore remain useful as an operator-support component, provided that numerical conclusions and recommendations are verified against analytical outputs and application-specific procedures. Whether these limitations arise primarily from model capacity requires comparative evaluation.
+\FloatBarrier
